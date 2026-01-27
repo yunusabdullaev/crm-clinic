@@ -1,0 +1,7 @@
+{
+    "email": "test_doctor@clinic.com",
+    "first_name": "Dr",
+    "last_name": "Test",
+    "password": "DoctorPass123!",
+    "role": "doctor"
+}

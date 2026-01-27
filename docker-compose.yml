@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
+    container_name: medical-crm-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=medical_crm
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - crm-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medical-crm-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ENVIRONMENT=production
+      - SERVICE_NAME=medical-crm
+      - SERVER_PORT=8080
+      - SERVER_READ_TIMEOUT=30
+      - SERVER_WRITE_TIMEOUT=30
+      - MONGO_URI=mongodb://mongo:27017
+      - MONGO_DB=medical_crm
+      - MONGO_TIMEOUT=10
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:-change-this-to-a-very-secure-secret-key-32-chars}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-change-this-to-another-secure-secret-key-32ch}
+      - JWT_ACCESS_TTL=900
+      - JWT_REFRESH_TTL=604800
+      - SUPERADMIN_EMAIL=${SUPERADMIN_EMAIL:-admin@crm.local}
+      - SUPERADMIN_PASSWORD=${SUPERADMIN_PASSWORD:-Admin123!}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - crm-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: medical-crm-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - crm-network
+
+networks:
+  crm-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local
