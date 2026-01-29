@@ -2,11 +2,13 @@ package handler
 
 import (
 	"net/http"
+	"os"
 	"strconv"
 
 	"medical-crm/internal/middleware"
 	"medical-crm/internal/models"
 	"medical-crm/internal/service"
+	"medical-crm/pkg/email"
 	apperrors "medical-crm/pkg/errors"
 
 	"github.com/gin-gonic/gin"
@@ -145,12 +147,47 @@ func (h *SuperadminHandler) InviteBoss(c *gin.Context) {
 	}
 
 	// Use environment variable for base URL in production
-	baseURL := c.GetHeader("X-Frontend-URL")
+	baseURL := os.Getenv("FRONTEND_URL")
 	if baseURL == "" {
-		baseURL = "http://localhost:3000"
+		baseURL = c.GetHeader("X-Frontend-URL")
+	}
+	if baseURL == "" {
+		baseURL = "https://crm-clinic-one.vercel.app"
 	}
 
-	c.JSON(http.StatusCreated, invitation.ToResponse(baseURL))
+	// Get clinic details for email
+	clinic, _ := h.clinicService.GetByID(c.Request.Context(), clinicID)
+	clinicName := "CRM Clinic"
+	if clinic != nil {
+		clinicName = clinic.Name
+	}
+
+	// Build invite link
+	inviteLink := baseURL + "/invite/accept?token=" + invitation.Token
+
+	// Send email via Resend
+	emailClient := email.NewResendClient()
+	emailErr := emailClient.SendInviteEmail(dto.Email, clinicName, inviteLink)
+
+	inviteResp := invitation.ToResponse(baseURL)
+	response := gin.H{
+		"id":         inviteResp.ID,
+		"email":      inviteResp.Email,
+		"role":       inviteResp.Role,
+		"token":      inviteResp.Token,
+		"expires_at": inviteResp.ExpiresAt,
+		"invite_url": inviteResp.InviteURL,
+	}
+
+	if emailErr != nil {
+		// Email failed but invitation was created - inform user
+		response["email_sent"] = false
+		response["email_error"] = "Email yuborilmadi, lekin taklif yaratildi. Linkni manually yuboring."
+	} else {
+		response["email_sent"] = true
+	}
+
+	c.JSON(http.StatusCreated, response)
 }
 
 // UpdateClinic updates a clinic
