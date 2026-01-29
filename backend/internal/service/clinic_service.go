@@ -6,10 +6,11 @@ import (
 	"encoding/hex"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"medical-crm/internal/models"
 	"medical-crm/internal/repository"
 	apperrors "medical-crm/pkg/errors"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ClinicService struct {
@@ -101,6 +102,42 @@ func (s *ClinicService) InviteBoss(ctx context.Context, clinicID, createdBy prim
 	}
 
 	return invitation, nil
+}
+
+// Update updates a clinic (superadmin only)
+func (s *ClinicService) Update(ctx context.Context, id primitive.ObjectID, dto models.UpdateClinicDTO) (*models.Clinic, error) {
+	clinic, err := s.clinicRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, apperrors.NotFound("Clinic")
+	}
+
+	// Apply updates only for provided fields
+	if dto.Name != nil && *dto.Name != "" {
+		// Check if name is already taken by another clinic
+		existing, _ := s.clinicRepo.GetByName(ctx, *dto.Name)
+		if existing != nil && existing.ID != id {
+			return nil, apperrors.Conflict("Clinic with this name already exists")
+		}
+		clinic.Name = *dto.Name
+	}
+	if dto.Timezone != nil {
+		clinic.Timezone = *dto.Timezone
+	}
+	if dto.Address != nil {
+		clinic.Address = *dto.Address
+	}
+	if dto.Phone != nil {
+		clinic.Phone = *dto.Phone
+	}
+	if dto.IsActive != nil {
+		clinic.IsActive = *dto.IsActive
+	}
+
+	if err := s.clinicRepo.Update(ctx, clinic); err != nil {
+		return nil, apperrors.InternalWithErr("Failed to update clinic", err)
+	}
+
+	return clinic, nil
 }
 
 // generateSecureToken generates a cryptographically secure random token

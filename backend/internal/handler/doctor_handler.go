@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"medical-crm/internal/middleware"
@@ -14,10 +15,11 @@ import (
 )
 
 type DoctorHandler struct {
-	appointmentService *service.AppointmentService
-	visitService       *service.VisitService
-	serviceService     *service.ServiceService
-	auditService       *service.AuditService
+	appointmentService   *service.AppointmentService
+	visitService         *service.VisitService
+	serviceService       *service.ServiceService
+	auditService         *service.AuditService
+	treatmentPlanService *service.TreatmentPlanService
 }
 
 func NewDoctorHandler(
@@ -25,16 +27,18 @@ func NewDoctorHandler(
 	visitService *service.VisitService,
 	serviceService *service.ServiceService,
 	auditService *service.AuditService,
+	treatmentPlanService *service.TreatmentPlanService,
 ) *DoctorHandler {
 	return &DoctorHandler{
-		appointmentService: appointmentService,
-		visitService:       visitService,
-		serviceService:     serviceService,
-		auditService:       auditService,
+		appointmentService:   appointmentService,
+		visitService:         visitService,
+		serviceService:       serviceService,
+		auditService:         auditService,
+		treatmentPlanService: treatmentPlanService,
 	}
 }
 
-// GetSchedule returns doctor's schedule for a date
+// GetSchedule returns doctor's schedule for a date range
 // GET /api/v1/doctor/schedule
 func (h *DoctorHandler) GetSchedule(c *gin.Context) {
 	requestID := middleware.GetRequestID(c)
@@ -53,9 +57,12 @@ func (h *DoctorHandler) GetSchedule(c *gin.Context) {
 		return
 	}
 
-	date := c.DefaultQuery("date", time.Now().UTC().Format("2006-01-02"))
+	// Support both single date and date range
+	today := time.Now().UTC().Format("2006-01-02")
+	from := c.DefaultQuery("from", c.DefaultQuery("date", today))
+	to := c.DefaultQuery("to", from)
 
-	appointments, err := h.appointmentService.ListByDoctor(c.Request.Context(), clinicID, doctorID, date)
+	appointments, err := h.appointmentService.ListByDoctorRange(c.Request.Context(), clinicID, doctorID, from, to)
 	if err != nil {
 		if appErr, ok := err.(*apperrors.AppError); ok {
 			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
@@ -67,7 +74,8 @@ func (h *DoctorHandler) GetSchedule(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"date":         date,
+		"from":         from,
+		"to":           to,
 		"appointments": appointments,
 	})
 }
@@ -317,4 +325,160 @@ func (h *DoctorHandler) UpdateAppointmentStatus(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{"message": "Appointment status updated"})
+}
+
+// CreateTreatmentPlan creates a new treatment plan for a patient
+// POST /api/v1/doctor/treatment-plans
+func (h *DoctorHandler) CreateTreatmentPlan(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	clinicID, err := middleware.GetClinicObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Clinic not found in token")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	doctorID, err := middleware.GetUserObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Invalid user")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	var dto models.CreateTreatmentPlanDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		appErr := apperrors.BadRequest("Invalid request body")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	plan, err := h.treatmentPlanService.CreatePlan(c.Request.Context(), clinicID, doctorID, dto)
+	if err != nil {
+		if appErr, ok := err.(*apperrors.AppError); ok {
+			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+			return
+		}
+		appErr := apperrors.Internal("Failed to create treatment plan")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	c.JSON(http.StatusCreated, plan.ToResponse())
+}
+
+// ListTreatmentPlansByPatient lists treatment plans for a specific patient
+// GET /api/v1/doctor/patients/:id/treatment-plans
+func (h *DoctorHandler) ListTreatmentPlansByPatient(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	clinicID, err := middleware.GetClinicObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Clinic not found in token")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	patientID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid patient ID")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	plans, err := h.treatmentPlanService.ListByPatient(c.Request.Context(), patientID, clinicID)
+	if err != nil {
+		appErr := apperrors.Internal("Failed to list treatment plans")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	responses := make([]models.TreatmentPlanResponse, len(plans))
+	for i, plan := range plans {
+		responses[i] = plan.ToResponse()
+	}
+
+	c.JSON(http.StatusOK, gin.H{"treatment_plans": responses})
+}
+
+// ListDoctorTreatmentPlans lists treatment plans created by the doctor
+// GET /api/v1/doctor/treatment-plans
+func (h *DoctorHandler) ListDoctorTreatmentPlans(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	clinicID, err := middleware.GetClinicObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Clinic not found in token")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	doctorID, err := middleware.GetUserObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Invalid user")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	status := c.Query("status")
+
+	plans, err := h.treatmentPlanService.ListByDoctor(c.Request.Context(), doctorID, clinicID, status)
+	if err != nil {
+		appErr := apperrors.Internal("Failed to list treatment plans")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	responses := make([]models.TreatmentPlanResponse, len(plans))
+	for i, plan := range plans {
+		responses[i] = plan.ToResponse()
+	}
+
+	c.JSON(http.StatusOK, gin.H{"treatment_plans": responses})
+}
+
+// UpdateTreatmentPlanStep updates the status of a treatment plan step
+// PUT /api/v1/doctor/treatment-plans/:id/steps/:step
+func (h *DoctorHandler) UpdateTreatmentPlanStep(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	clinicID, err := middleware.GetClinicObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Clinic not found in token")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	planID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid treatment plan ID")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	stepNumber, err := strconv.Atoi(c.Param("step"))
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid step number")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	var dto models.UpdatePlanStepDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		appErr := apperrors.BadRequest("Invalid request body")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	if err := h.treatmentPlanService.UpdateStepStatus(c.Request.Context(), planID, clinicID, stepNumber, dto); err != nil {
+		if appErr, ok := err.(*apperrors.AppError); ok {
+			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+			return
+		}
+		appErr := apperrors.Internal("Failed to update treatment plan step")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Treatment plan step updated"})
 }

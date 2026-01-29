@@ -112,11 +112,6 @@ func (s *VisitService) CompleteVisit(ctx context.Context, id, clinicID primitive
 		return nil, apperrors.BadRequest("Visit is already completed")
 	}
 
-	// Diagnosis is required
-	if dto.Diagnosis == "" {
-		return nil, apperrors.DiagnosisRequired()
-	}
-
 	// Get services and calculate totals
 	visit.Services = []models.VisitService{}
 	serviceIDs := make([]primitive.ObjectID, 0, len(dto.Services))
@@ -196,6 +191,8 @@ func (s *VisitService) CompleteVisit(ctx context.Context, id, clinicID primitive
 	// Update visit status
 	visit.Diagnosis = dto.Diagnosis
 	visit.Notes = dto.Notes
+	visit.AffectedTeeth = dto.AffectedTeeth
+	visit.PaymentType = dto.PaymentType
 	visit.Status = models.VisitStatusCompleted
 	now := time.Now().UTC()
 	visit.CompletedAt = &now

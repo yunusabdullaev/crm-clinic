@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
+	"medical-crm/pkg/logger"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"medical-crm/pkg/logger"
 )
 
 // IndexDefinition represents a MongoDB index
@@ -109,6 +110,13 @@ func GetIndexes() []IndexDefinition {
 			Unique:     false,
 			Name:       "idx_appointments_doctor_date",
 		},
+		// Index for date range queries with sorting
+		{
+			Collection: "appointments",
+			Keys:       bson.D{{Key: "clinic_id", Value: 1}, {Key: "start_time", Value: -1}, {Key: "doctor_id", Value: 1}},
+			Unique:     false,
+			Name:       "idx_appointments_clinic_start_time_doctor",
+		},
 
 		// Services
 		{
@@ -159,10 +167,10 @@ func CreateIndexes(db *mongo.Database, log *logger.Logger) error {
 	defer cancel()
 
 	indexes := GetIndexes()
-	
+
 	for _, idx := range indexes {
 		collection := db.Collection(idx.Collection)
-		
+
 		indexModel := mongo.IndexModel{
 			Keys: idx.Keys,
 			Options: options.Index().
@@ -170,7 +178,7 @@ func CreateIndexes(db *mongo.Database, log *logger.Logger) error {
 				SetName(idx.Name).
 				SetBackground(true),
 		}
-		
+
 		if idx.Sparse {
 			indexModel.Options.SetSparse(true)
 		}
@@ -185,7 +193,7 @@ func CreateIndexes(db *mongo.Database, log *logger.Logger) error {
 			log.Error("Failed to create index", err)
 			return err
 		}
-		
+
 		log.Infof("Created index %s on %s", idx.Name, idx.Collection)
 	}
 

@@ -36,6 +36,8 @@ type MonthlyReport struct {
 	TotalDoctorEarnings float64            `json:"total_doctor_earnings"`
 	GrossProfit         float64            `json:"gross_profit"`
 	NetProfit           float64            `json:"net_profit"`
+	// Payment breakdown
+	PaymentBreakdown map[string]float64 `json:"payment_breakdown"` // "cash" and "card" totals
 }
 
 type DoctorEarning struct {
@@ -145,6 +147,7 @@ func (s *ReportService) GetMonthlyReport(ctx context.Context, clinicID primitive
 
 	// Calculate totals and group by doctor
 	doctorStats := make(map[string]*DoctorEarning)
+	paymentBreakdown := map[string]float64{"cash": 0, "card": 0}
 	totalRevenue := 0.0
 	totalDiscount := 0.0
 
@@ -156,6 +159,11 @@ func (s *ReportService) GetMonthlyReport(ctx context.Context, clinicID primitive
 
 		totalRevenue += v.Total
 		totalDiscount += v.DiscountAmount
+
+		// Track payment types
+		if v.PaymentType != "" {
+			paymentBreakdown[v.PaymentType] += v.Total
+		}
 
 		doctorID := v.DoctorID.Hex()
 		if _, exists := doctorStats[doctorID]; !exists {
@@ -227,5 +235,6 @@ func (s *ReportService) GetMonthlyReport(ctx context.Context, clinicID primitive
 		TotalDoctorEarnings: totalDoctorEarnings,
 		GrossProfit:         grossProfit,
 		NetProfit:           netProfit,
+		PaymentBreakdown:    paymentBreakdown,
 	}, nil
 }

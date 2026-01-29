@@ -54,6 +54,21 @@ class ApiClient {
         }
 
         if (!response.ok) {
+            // Handle 401 Unauthorized - token expired or invalid
+            if (response.status === 401 && requireAuth) {
+                console.warn('Token expired or invalid, redirecting to login...');
+                this.logout();
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/login';
+                }
+                throw new Error('Session expired. Please login again.');
+            }
+
+            // Handle 409 Conflict - appointment time already taken
+            if (response.status === 409) {
+                throw new Error('Bu vaqtda shu shifokor uchun allaqachon navbat mavjud. Boshqa vaqt tanlang.');
+            }
+
             const error = data as ApiError;
             throw new Error(error.error?.message || 'An error occurred');
         }
@@ -120,10 +135,19 @@ class ApiClient {
     }
 
     // Appointments
-    async getAppointments(date: string) {
-        return this.request<{ appointments: any[]; total: number }>(
+    async getAppointments(params?: { from?: string; to?: string; date?: string; doctor_id?: string; status?: string; page?: number; limit?: number }) {
+        const query = new URLSearchParams();
+        if (params?.from) query.append('from', params.from);
+        if (params?.to) query.append('to', params.to);
+        if (params?.date) query.append('date', params.date);
+        if (params?.doctor_id) query.append('doctor_id', params.doctor_id);
+        if (params?.status) query.append('status', params.status);
+        if (params?.page) query.append('page', params.page.toString());
+        if (params?.limit) query.append('limit', params.limit.toString());
+        const queryString = query.toString() ? `?${query.toString()}` : '';
+        return this.request<{ appointments: any[]; total: number; from: string; to: string }>(
             'GET',
-            `/api/v1/appointments?date=${date}`
+            `/api/v1/appointments${queryString}`
         );
     }
 
@@ -137,10 +161,13 @@ class ApiClient {
     }
 
     // Doctor schedule
-    async getSchedule(date: string) {
-        return this.request<{ date: string; appointments: any[] }>(
+    async getSchedule(from: string, to?: string) {
+        const query = new URLSearchParams();
+        query.append('from', from);
+        if (to) query.append('to', to);
+        return this.request<{ from: string; to: string; appointments: any[] }>(
             'GET',
-            `/api/v1/doctor/schedule?date=${date}`
+            `/api/v1/doctor/schedule?${query.toString()}`
         );
     }
 
@@ -259,6 +286,28 @@ class ApiClient {
 
     async inviteBoss(clinicId: string, email: string) {
         return this.request('POST', `/api/v1/admin/clinics/${clinicId}/invite`, { email });
+    }
+
+    async updateClinic(clinicId: string, data: { name?: string; timezone?: string; address?: string; phone?: string; is_active?: boolean }) {
+        return this.request('PATCH', `/api/v1/admin/clinics/${clinicId}`, data);
+    }
+
+    // Treatment Plans
+    async createTreatmentPlan(data: { patient_id: string; title: string; steps: { description: string }[] }) {
+        return this.request('POST', '/api/v1/doctor/treatment-plans', data);
+    }
+
+    async getTreatmentPlans(status?: string) {
+        const query = status ? `?status=${status}` : '';
+        return this.request<{ treatment_plans: any[] }>('GET', `/api/v1/doctor/treatment-plans${query}`);
+    }
+
+    async getPatientTreatmentPlans(patientId: string) {
+        return this.request<{ treatment_plans: any[] }>('GET', `/api/v1/doctor/patients/${patientId}/treatment-plans`);
+    }
+
+    async updateTreatmentPlanStep(planId: string, stepNumber: number, data: { status: string; visit_id?: string; notes?: string }) {
+        return this.request('PUT', `/api/v1/doctor/treatment-plans/${planId}/steps/${stepNumber}`, data);
     }
 }
 

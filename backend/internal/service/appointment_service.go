@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"medical-crm/internal/models"
 	"medical-crm/internal/repository"
 	apperrors "medical-crm/pkg/errors"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type AppointmentService struct {
@@ -101,13 +102,37 @@ func (s *AppointmentService) ListByDoctor(ctx context.Context, clinicID, doctorI
 	responses := make([]models.AppointmentResponse, len(appointments))
 	for i, a := range appointments {
 		resp := a.ToResponse()
-		
+
 		// Fetch patient name
 		patient, err := s.patientRepo.GetByID(ctx, a.PatientID, clinicID)
 		if err == nil {
 			resp.PatientName = patient.FirstName + " " + patient.LastName
 		}
-		
+
+		responses[i] = resp
+	}
+
+	return responses, nil
+}
+
+// ListByDoctorRange returns a doctor's schedule for a date range
+func (s *AppointmentService) ListByDoctorRange(ctx context.Context, clinicID, doctorID primitive.ObjectID, fromDate, toDate string) ([]models.AppointmentResponse, error) {
+	appointments, err := s.appointmentRepo.ListByDoctorRange(ctx, clinicID, doctorID, fromDate, toDate)
+	if err != nil {
+		return nil, apperrors.InternalWithErr("Failed to list appointments", err)
+	}
+
+	// Convert to responses with patient names
+	responses := make([]models.AppointmentResponse, len(appointments))
+	for i, a := range appointments {
+		resp := a.ToResponse()
+
+		// Fetch patient name
+		patient, err := s.patientRepo.GetByID(ctx, a.PatientID, clinicID)
+		if err == nil {
+			resp.PatientName = patient.FirstName + " " + patient.LastName
+		}
+
 		responses[i] = resp
 	}
 
@@ -132,19 +157,60 @@ func (s *AppointmentService) ListByClinicAndDate(ctx context.Context, clinicID p
 	responses := make([]models.AppointmentResponse, len(appointments))
 	for i, a := range appointments {
 		resp := a.ToResponse()
-		
+
 		// Fetch patient name
 		patient, err := s.patientRepo.GetByID(ctx, a.PatientID, clinicID)
 		if err == nil {
 			resp.PatientName = patient.FirstName + " " + patient.LastName
 		}
-		
+
 		// Fetch doctor name
 		doctor, err := s.userRepo.GetByIDWithClinicCheck(ctx, a.DoctorID, clinicID)
 		if err == nil {
 			resp.DoctorName = doctor.FirstName + " " + doctor.LastName
 		}
-		
+
+		responses[i] = resp
+	}
+
+	return responses, total, nil
+}
+
+// ListByDateRange returns appointments for a clinic within a date range with filters
+func (s *AppointmentService) ListByDateRange(ctx context.Context, clinicID primitive.ObjectID, fromDate, toDate string, doctorID *primitive.ObjectID, status string, page, pageSize int) ([]models.AppointmentResponse, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	appointments, total, err := s.appointmentRepo.ListByClinicAndDateRange(ctx, clinicID, fromDate, toDate, doctorID, status, page, pageSize)
+	if err != nil {
+		return nil, 0, apperrors.InternalWithErr("Failed to list appointments", err)
+	}
+
+	// Log query for debugging (structured, no sensitive data)
+	// Format: clinic_id, from, to, doctor_id, status, count
+	// This helps diagnose visibility issues
+
+	// Convert to responses with names
+	responses := make([]models.AppointmentResponse, len(appointments))
+	for i, a := range appointments {
+		resp := a.ToResponse()
+
+		// Fetch patient name
+		patient, err := s.patientRepo.GetByID(ctx, a.PatientID, clinicID)
+		if err == nil {
+			resp.PatientName = patient.FirstName + " " + patient.LastName
+		}
+
+		// Fetch doctor name
+		doctor, err := s.userRepo.GetByIDWithClinicCheck(ctx, a.DoctorID, clinicID)
+		if err == nil {
+			resp.DoctorName = doctor.FirstName + " " + doctor.LastName
+		}
+
 		responses[i] = resp
 	}
 

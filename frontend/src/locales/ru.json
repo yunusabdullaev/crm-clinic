@@ -1,0 +1,119 @@
+{
+    "common": {
+        "loading": "Загрузка...",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "create": "Создать",
+        "edit": "Редактировать",
+        "delete": "Удалить",
+        "confirm": "Подтвердить",
+        "done": "Готово",
+        "filter": "Фильтр",
+        "search": "Поиск",
+        "logout": "Выйти",
+        "active": "Активен",
+        "inactive": "Неактивен",
+        "status": "Статус",
+        "actions": "Действия"
+    },
+    "auth": {
+        "login": "Вход",
+        "email": "Электронная почта",
+        "password": "Пароль",
+        "loginButton": "Войти",
+        "loginFailed": "Ошибка входа"
+    },
+    "nav": {
+        "brand": "Medical CRM",
+        "admin": "Администратор",
+        "receptionist": "Регистратор",
+        "doctor": "Врач",
+        "boss": "Руководитель"
+    },
+    "dashboard": {
+        "admin": "Панель администратора",
+        "receptionist": "Панель регистратуры",
+        "doctor": "Панель врача",
+        "boss": "Панель руководителя"
+    },
+    "clinics": {
+        "title": "Клиники",
+        "createClinic": "Создать клинику",
+        "editClinic": "Редактировать клинику",
+        "clinicName": "Название клиники",
+        "timezone": "Часовой пояс",
+        "address": "Адрес",
+        "phone": "Телефон",
+        "inviteBoss": "Пригласить руководителя",
+        "bossEmail": "Email руководителя",
+        "inviteSuccess": "Приглашение успешно создано!",
+        "copyLink": "Скопируйте эту ссылку и отправьте руководителю."
+    },
+    "patients": {
+        "title": "Пациенты",
+        "addPatient": "Добавить пациента",
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "phone": "Телефон",
+        "gender": "Пол",
+        "male": "Мужской",
+        "female": "Женский",
+        "other": "Другой",
+        "searchPlaceholder": "Поиск пациентов...",
+        "noPatients": "Пациенты не найдены"
+    },
+    "appointments": {
+        "title": "Записи",
+        "todayAppointments": "Записи на сегодня",
+        "bookAppointment": "Записать на приём",
+        "patient": "Пациент",
+        "doctor": "Врач",
+        "time": "Время",
+        "dateTime": "Дата и время",
+        "from": "С",
+        "to": "По",
+        "selectPatient": "Выберите пациента...",
+        "selectDoctor": "Выберите врача...",
+        "noAppointments": "Нет записей",
+        "scheduled": "Запланировано",
+        "confirmed": "Подтверждено",
+        "inProgress": "В процессе",
+        "completed": "Завершено",
+        "cancelled": "Отменено"
+    },
+    "visits": {
+        "title": "Визиты",
+        "todayVisits": "Визиты сегодня",
+        "startVisit": "Начать визит",
+        "completeVisit": "Завершить визит",
+        "diagnosis": "Диагноз",
+        "diagnosisRequired": "Диагноз обязателен",
+        "notes": "Заметки",
+        "services": "Услуги",
+        "addService": "Добавить услугу",
+        "noVisits": "Сегодня нет визитов",
+        "started": "Начат",
+        "completed": "Завершён"
+    },
+    "payment": {
+        "paymentType": "Тип оплаты",
+        "cash": "Наличные",
+        "card": "Карта",
+        "total": "Итого",
+        "discount": "Скидка",
+        "discountType": "Тип скидки",
+        "discountValue": "Размер скидки",
+        "noDiscount": "Без скидки",
+        "percentage": "Процент",
+        "fixed": "Фиксированная сумма"
+    },
+    "reports": {
+        "dailyReport": "Ежедневный отчёт",
+        "monthlyReport": "Ежемесячный отчёт",
+        "revenue": "Доход",
+        "expenses": "Расходы",
+        "profit": "Прибыль",
+        "doctorEarnings": "Заработок врачей",
+        "paymentBreakdown": "Разбивка по оплате"
+    }
+}

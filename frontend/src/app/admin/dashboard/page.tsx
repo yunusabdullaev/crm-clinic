@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     const [clinicForm, setClinicForm] = useState({ name: '', timezone: 'UTC', address: '', phone: '' });
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteResult, setInviteResult] = useState<any>(null);
+    const [editClinicForm, setEditClinicForm] = useState({ name: '', timezone: '', address: '', phone: '', is_active: true });
 
     useEffect(() => {
         const u = api.getUser();
@@ -71,6 +72,29 @@ export default function AdminDashboard() {
         setShowModal('invite');
     };
 
+    const openEditModal = (clinic: any) => {
+        setSelectedClinic(clinic);
+        setEditClinicForm({
+            name: clinic.name,
+            timezone: clinic.timezone,
+            address: clinic.address || '',
+            phone: clinic.phone || '',
+            is_active: clinic.is_active,
+        });
+        setShowModal('edit');
+    };
+
+    const handleEditClinic = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await api.updateClinic(selectedClinic.id, editClinicForm);
+            setShowModal(null);
+            loadClinics();
+        } catch (err: any) {
+            alert(err.message);
+        }
+    };
+
     if (loading) return <div className="container"><p>Loading...</p></div>;
 
     return (
@@ -111,6 +135,9 @@ export default function AdminDashboard() {
                                     <td>{c.address || '-'}</td>
                                     <td>{c.is_active ? '✅ Active' : '❌ Inactive'}</td>
                                     <td>
+                                        <button className="btn btn-secondary" style={{ fontSize: 12, marginRight: 4 }} onClick={() => openEditModal(c)}>
+                                            Edit
+                                        </button>
                                         <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => openInviteModal(c)}>
                                             Invite Boss
                                         </button>
@@ -200,6 +227,49 @@ export default function AdminDashboard() {
                                     </div>
                                 </form>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {showModal === 'edit' && (
+                    <div className="modal-overlay" onClick={() => setShowModal(null)}>
+                        <div className="modal" onClick={(e) => e.stopPropagation()}>
+                            <h2>Edit Clinic: {selectedClinic?.name}</h2>
+                            <form onSubmit={handleEditClinic}>
+                                <div className="form-group">
+                                    <label>Clinic Name *</label>
+                                    <input className="input" value={editClinicForm.name} onChange={(e) => setEditClinicForm({ ...editClinicForm, name: e.target.value })} required />
+                                </div>
+                                <div className="form-group">
+                                    <label>Timezone</label>
+                                    <select className="input" value={editClinicForm.timezone} onChange={(e) => setEditClinicForm({ ...editClinicForm, timezone: e.target.value })}>
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">America/New_York</option>
+                                        <option value="America/Los_Angeles">America/Los_Angeles</option>
+                                        <option value="Europe/London">Europe/London</option>
+                                        <option value="Asia/Tokyo">Asia/Tokyo</option>
+                                        <option value="Asia/Tashkent">Asia/Tashkent</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Address</label>
+                                    <input className="input" value={editClinicForm.address} onChange={(e) => setEditClinicForm({ ...editClinicForm, address: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Phone</label>
+                                    <input className="input" value={editClinicForm.phone} onChange={(e) => setEditClinicForm({ ...editClinicForm, phone: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <input type="checkbox" checked={editClinicForm.is_active} onChange={(e) => setEditClinicForm({ ...editClinicForm, is_active: e.target.checked })} />
+                                        Active
+                                    </label>
+                                </div>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button type="submit" className="btn btn-primary">Save</button>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(null)}>Cancel</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}

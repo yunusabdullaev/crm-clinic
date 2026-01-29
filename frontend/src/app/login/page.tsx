@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useSettings } from '@/lib/settings';
 
 export default function LoginPage() {
     const router = useRouter();
+    const { t } = useSettings();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -46,31 +48,31 @@ export default function LoginPage() {
     return (
         <div className="login-page">
             <div className="login-card">
-                <h1>Medical CRM</h1>
-                <p>Sign in to your account</p>
+                <h1>{t('login.title')}</h1>
+                <p>{t('login.subtitle')}</p>
 
                 {error && <div className="error-msg">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Email</label>
+                        <label>{t('login.email')}</label>
                         <input
                             type="email"
                             className="input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
+                            placeholder={t('login.emailPlaceholder')}
                             required
                         />
                     </div>
                     <div className="form-group">
-                        <label>Password</label>
+                        <label>{t('login.password')}</label>
                         <input
                             type="password"
                             className="input"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
+                            placeholder={t('login.passwordPlaceholder')}
                             required
                         />
                     </div>
@@ -80,7 +82,7 @@ export default function LoginPage() {
                         style={{ width: '100%' }}
                         disabled={loading}
                     >
-                        {loading ? 'Signing in...' : 'Sign In'}
+                        {loading ? t('login.submitting') : t('login.submit')}
                     </button>
                 </form>
             </div>

@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	"medical-crm/internal/models"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"medical-crm/internal/models"
 )
 
 type AppointmentRepository struct {
@@ -121,6 +122,37 @@ func (r *AppointmentRepository) ListByDoctor(ctx context.Context, clinicID, doct
 	return appointments, nil
 }
 
+// ListByDoctorRange returns appointments for a doctor within a date range
+func (r *AppointmentRepository) ListByDoctorRange(ctx context.Context, clinicID, doctorID primitive.ObjectID, fromDate, toDate string) ([]models.Appointment, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	filter := bson.M{
+		"clinic_id": clinicID,
+		"doctor_id": doctorID,
+		"date": bson.M{
+			"$gte": fromDate,
+			"$lte": toDate,
+		},
+		"status": bson.M{"$nin": []string{models.AppointmentStatusCancelled}},
+	}
+
+	opts := options.Find().SetSort(bson.D{{Key: "start_time", Value: 1}})
+
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var appointments []models.Appointment
+	if err = cursor.All(ctx, &appointments); err != nil {
+		return nil, err
+	}
+
+	return appointments, nil
+}
+
 // ListByClinicAndDate returns all appointments for a clinic on a date
 func (r *AppointmentRepository) ListByClinicAndDate(ctx context.Context, clinicID primitive.ObjectID, date string, page, pageSize int) ([]models.Appointment, int64, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
@@ -142,6 +174,63 @@ func (r *AppointmentRepository) ListByClinicAndDate(ctx context.Context, clinicI
 		SetSkip(int64(skip)).
 		SetLimit(int64(pageSize)).
 		SetSort(bson.D{{Key: "start_time", Value: 1}})
+
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var appointments []models.Appointment
+	if err = cursor.All(ctx, &appointments); err != nil {
+		return nil, 0, err
+	}
+
+	return appointments, total, nil
+}
+
+// ListByClinicAndDateRange returns appointments for a clinic within a date range with filters
+func (r *AppointmentRepository) ListByClinicAndDateRange(ctx context.Context, clinicID primitive.ObjectID, fromDate, toDate string, doctorID *primitive.ObjectID, status string, page, pageSize int) ([]models.Appointment, int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	filter := bson.M{
+		"clinic_id": clinicID,
+	}
+
+	// Date range filter using the date field
+	if fromDate != "" || toDate != "" {
+		dateFilter := bson.M{}
+		if fromDate != "" {
+			dateFilter["$gte"] = fromDate
+		}
+		if toDate != "" {
+			dateFilter["$lte"] = toDate
+		}
+		filter["date"] = dateFilter
+	}
+
+	// Optional doctor filter
+	if doctorID != nil {
+		filter["doctor_id"] = *doctorID
+	}
+
+	// Optional status filter
+	if status != "" {
+		filter["status"] = status
+	}
+
+	skip := (page - 1) * pageSize
+
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	opts := options.Find().
+		SetSkip(int64(skip)).
+		SetLimit(int64(100)).                          // Show up to 100 appointments
+		SetSort(bson.D{{Key: "start_time", Value: 1}}) // Ascending by start_time
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {

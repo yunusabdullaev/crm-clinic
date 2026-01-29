@@ -1,16 +1,18 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"medical-crm/internal/middleware"
 	"medical-crm/internal/models"
 	"medical-crm/internal/service"
 	apperrors "medical-crm/pkg/errors"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ReceptionistHandler struct {
@@ -250,8 +252,9 @@ func (h *ReceptionistHandler) CreateAppointment(c *gin.Context) {
 	c.JSON(http.StatusCreated, appointment.ToResponse())
 }
 
-// ListAppointments returns appointments for a date
+// ListAppointments returns appointments with optional filters
 // GET /api/v1/appointments
+// Query params: from, to, doctor_id, status, page, limit
 func (h *ReceptionistHandler) ListAppointments(c *gin.Context) {
 	requestID := middleware.GetRequestID(c)
 
@@ -262,12 +265,44 @@ func (h *ReceptionistHandler) ListAppointments(c *gin.Context) {
 		return
 	}
 
-	date := c.DefaultQuery("date", time.Now().UTC().Format("2006-01-02"))
+	// Parse query parameters
+	fromDate := c.Query("from")
+	toDate := c.Query("to")
+	doctorIDStr := c.Query("doctor_id")
+	status := c.Query("status")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "50"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("limit", c.DefaultQuery("page_size", "50")))
 
-	appointments, total, err := h.appointmentService.ListByClinicAndDate(c.Request.Context(), clinicID, date, page, pageSize)
+	// For backward compatibility: if only "date" is provided, use single-date query
+	singleDate := c.Query("date")
+	if singleDate != "" && fromDate == "" && toDate == "" {
+		fromDate = singleDate
+		toDate = singleDate
+	}
+
+	// Default: if no date params, show today only (more predictable than 7-day range)
+	if fromDate == "" && toDate == "" && singleDate == "" {
+		now := time.Now().UTC()
+		fromDate = now.Format("2006-01-02")
+		toDate = now.Format("2006-01-02")
+	}
+
+	// Parse optional doctor ID
+	var doctorID *primitive.ObjectID
+	if doctorIDStr != "" {
+		id, err := primitive.ObjectIDFromHex(doctorIDStr)
+		if err == nil {
+			doctorID = &id
+		}
+	}
+
+	// DIAGNOSTIC: Log query parameters
+	log.Printf("[APPOINTMENTS_DEBUG] request_id=%s clinic_id=%s from=%s to=%s doctor_id=%s status=%s page=%d limit=%d",
+		requestID, clinicID.Hex(), fromDate, toDate, doctorIDStr, status, page, pageSize)
+
+	appointments, total, err := h.appointmentService.ListByDateRange(c.Request.Context(), clinicID, fromDate, toDate, doctorID, status, page, pageSize)
 	if err != nil {
+		log.Printf("[APPOINTMENTS_DEBUG] request_id=%s error=%v", requestID, err)
 		if appErr, ok := err.(*apperrors.AppError); ok {
 			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
 			return
@@ -277,11 +312,17 @@ func (h *ReceptionistHandler) ListAppointments(c *gin.Context) {
 		return
 	}
 
+	// DIAGNOSTIC: Log results
+	log.Printf("[APPOINTMENTS_DEBUG] request_id=%s total=%d returned=%d", requestID, total, len(appointments))
+
 	c.JSON(http.StatusOK, gin.H{
 		"appointments": appointments,
 		"total":        total,
 		"page":         page,
 		"page_size":    pageSize,
+		"from":         fromDate,
+		"to":           toDate,
+		"clinic_id":    clinicID.Hex(), // Include for frontend debugging
 	})
 }
 

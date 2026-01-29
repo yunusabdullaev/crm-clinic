@@ -26,6 +26,15 @@ type CreateClinicDTO struct {
 	Phone    string `json:"phone,omitempty"`
 }
 
+// UpdateClinicDTO is the input for updating a clinic (superadmin only)
+type UpdateClinicDTO struct {
+	Name     *string `json:"name,omitempty" binding:"omitempty,min=2,max=100"`
+	Timezone *string `json:"timezone,omitempty"`
+	Address  *string `json:"address,omitempty"`
+	Phone    *string `json:"phone,omitempty"`
+	IsActive *bool   `json:"is_active,omitempty"`
+}
+
 // ClinicResponse is the API response for a clinic
 type ClinicResponse struct {
 	ID        string    `json:"id"`

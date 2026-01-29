@@ -1,0 +1,119 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "create": "Create",
+        "edit": "Edit",
+        "delete": "Delete",
+        "confirm": "Confirm",
+        "done": "Done",
+        "filter": "Filter",
+        "search": "Search",
+        "logout": "Logout",
+        "active": "Active",
+        "inactive": "Inactive",
+        "status": "Status",
+        "actions": "Actions"
+    },
+    "auth": {
+        "login": "Login",
+        "email": "Email",
+        "password": "Password",
+        "loginButton": "Sign In",
+        "loginFailed": "Login failed"
+    },
+    "nav": {
+        "brand": "Medical CRM",
+        "admin": "Admin",
+        "receptionist": "Receptionist",
+        "doctor": "Doctor",
+        "boss": "Boss"
+    },
+    "dashboard": {
+        "admin": "Admin Dashboard",
+        "receptionist": "Reception Dashboard",
+        "doctor": "Doctor Dashboard",
+        "boss": "Boss Dashboard"
+    },
+    "clinics": {
+        "title": "Clinics",
+        "createClinic": "Create Clinic",
+        "editClinic": "Edit Clinic",
+        "clinicName": "Clinic Name",
+        "timezone": "Timezone",
+        "address": "Address",
+        "phone": "Phone",
+        "inviteBoss": "Invite Boss",
+        "bossEmail": "Boss Email",
+        "inviteSuccess": "Invitation created successfully!",
+        "copyLink": "Copy this link and send it to the boss."
+    },
+    "patients": {
+        "title": "Patients",
+        "addPatient": "Add Patient",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "phone": "Phone",
+        "gender": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "other": "Other",
+        "searchPlaceholder": "Search patients...",
+        "noPatients": "No patients found"
+    },
+    "appointments": {
+        "title": "Appointments",
+        "todayAppointments": "Today's Appointments",
+        "bookAppointment": "Book Appointment",
+        "patient": "Patient",
+        "doctor": "Doctor",
+        "time": "Time",
+        "dateTime": "Date & Time",
+        "from": "From",
+        "to": "To",
+        "selectPatient": "Select Patient...",
+        "selectDoctor": "Select Doctor...",
+        "noAppointments": "No appointments",
+        "scheduled": "Scheduled",
+        "confirmed": "Confirmed",
+        "inProgress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+    },
+    "visits": {
+        "title": "Visits",
+        "todayVisits": "Today's Visits",
+        "startVisit": "Start Visit",
+        "completeVisit": "Complete Visit",
+        "diagnosis": "Diagnosis",
+        "diagnosisRequired": "Diagnosis is required",
+        "notes": "Notes",
+        "services": "Services",
+        "addService": "Add Service",
+        "noVisits": "No visits today",
+        "started": "Started",
+        "completed": "Completed"
+    },
+    "payment": {
+        "paymentType": "Payment Type",
+        "cash": "Cash",
+        "card": "Card",
+        "total": "Total",
+        "discount": "Discount",
+        "discountType": "Discount Type",
+        "discountValue": "Discount Value",
+        "noDiscount": "No Discount",
+        "percentage": "Percentage",
+        "fixed": "Fixed Amount"
+    },
+    "reports": {
+        "dailyReport": "Daily Report",
+        "monthlyReport": "Monthly Report",
+        "revenue": "Revenue",
+        "expenses": "Expenses",
+        "profit": "Profit",
+        "doctorEarnings": "Doctor Earnings",
+        "paymentBreakdown": "Payment Breakdown"
+    }
+}

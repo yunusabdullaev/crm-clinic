@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { SettingsProvider } from '@/lib/settings';
+import { I18nProvider } from '@/lib/i18n';
 
 export const metadata: Metadata = {
     title: 'Medical CRM',
@@ -15,9 +16,11 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <body>
-                <SettingsProvider>
-                    {children}
-                </SettingsProvider>
+                <I18nProvider>
+                    <SettingsProvider>
+                        {children}
+                    </SettingsProvider>
+                </I18nProvider>
             </body>
         </html>
     );

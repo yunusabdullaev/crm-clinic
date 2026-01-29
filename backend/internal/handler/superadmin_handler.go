@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"medical-crm/internal/middleware"
 	"medical-crm/internal/models"
 	"medical-crm/internal/service"
 	apperrors "medical-crm/pkg/errors"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type SuperadminHandler struct {
@@ -150,4 +151,37 @@ func (h *SuperadminHandler) InviteBoss(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, invitation.ToResponse(baseURL))
+}
+
+// UpdateClinic updates a clinic
+// PATCH /api/v1/admin/clinics/:id
+func (h *SuperadminHandler) UpdateClinic(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid clinic ID")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	var dto models.UpdateClinicDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		appErr := apperrors.Validation("Invalid request body: " + err.Error())
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	clinic, err := h.clinicService.Update(c.Request.Context(), id, dto)
+	if err != nil {
+		if appErr, ok := err.(*apperrors.AppError); ok {
+			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+			return
+		}
+		appErr := apperrors.Internal("Failed to update clinic")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	c.JSON(http.StatusOK, clinic.ToResponse())
 }

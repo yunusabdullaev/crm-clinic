@@ -12,6 +12,17 @@ const (
 	VisitStatusCompleted = "completed"
 )
 
+// PaymentType constants
+const (
+	PaymentTypeCash = "cash"
+	PaymentTypeCard = "card"
+)
+
+// ValidPaymentTypes returns valid payment types
+func ValidPaymentTypes() []string {
+	return []string{PaymentTypeCash, PaymentTypeCard}
+}
+
 // VisitService represents a service performed during a visit
 type VisitService struct {
 	ServiceID   primitive.ObjectID `bson:"service_id" json:"service_id"`
@@ -32,14 +43,16 @@ type Visit struct {
 	Status         string              `bson:"status" json:"status"`
 	Diagnosis      string              `bson:"diagnosis,omitempty" json:"diagnosis,omitempty"`
 	Notes          string              `bson:"notes,omitempty" json:"notes,omitempty"`
+	AffectedTeeth  []string            `bson:"affected_teeth,omitempty" json:"affected_teeth,omitempty"`
 	Services       []VisitService      `bson:"services" json:"services"`
 	Subtotal       float64             `bson:"subtotal" json:"subtotal"`                               // Sum of all services
 	DiscountType   string              `bson:"discount_type,omitempty" json:"discount_type,omitempty"` // "percentage" or "fixed"
 	DiscountValue  float64             `bson:"discount_value" json:"discount_value"`
-	DiscountAmount float64             `bson:"discount_amount" json:"discount_amount"` // Calculated discount
-	Total          float64             `bson:"total" json:"total"`                     // Subtotal - DiscountAmount
-	DoctorShare    float64             `bson:"doctor_share" json:"doctor_share"`       // Percentage of total
-	DoctorEarning  float64             `bson:"doctor_earning" json:"doctor_earning"`   // Calculated earning
+	DiscountAmount float64             `bson:"discount_amount" json:"discount_amount"`               // Calculated discount
+	Total          float64             `bson:"total" json:"total"`                                   // Subtotal - DiscountAmount
+	DoctorShare    float64             `bson:"doctor_share" json:"doctor_share"`                     // Percentage of total
+	DoctorEarning  float64             `bson:"doctor_earning" json:"doctor_earning"`                 // Calculated earning
+	PaymentType    string              `bson:"payment_type,omitempty" json:"payment_type,omitempty"` // "cash" or "card"
 	CreatedAt      time.Time           `bson:"created_at" json:"created_at"`
 	UpdatedAt      time.Time           `bson:"updated_at" json:"updated_at"`
 	CompletedAt    *time.Time          `bson:"completed_at,omitempty" json:"completed_at,omitempty"`
@@ -59,11 +72,13 @@ type AddVisitServiceDTO struct {
 
 // CompleteVisitDTO is the input for completing a visit
 type CompleteVisitDTO struct {
-	Diagnosis     string               `json:"diagnosis" binding:"required,min=1"`
+	Diagnosis     string               `json:"diagnosis,omitempty"`
 	Notes         string               `json:"notes,omitempty"`
 	Services      []AddVisitServiceDTO `json:"services" binding:"required,dive"`
 	DiscountType  string               `json:"discount_type,omitempty" binding:"omitempty,oneof=percentage fixed"`
 	DiscountValue float64              `json:"discount_value,omitempty" binding:"omitempty,gte=0"`
+	PaymentType   string               `json:"payment_type" binding:"required,oneof=cash card"`
+	AffectedTeeth []string             `json:"affected_teeth,omitempty"`
 	// DoctorShare is now determined by the active doctor contract, not submitted by the doctor
 }
 
@@ -79,6 +94,7 @@ type VisitResponse struct {
 	Status         string         `json:"status"`
 	Diagnosis      string         `json:"diagnosis,omitempty"`
 	Notes          string         `json:"notes,omitempty"`
+	AffectedTeeth  []string       `json:"affected_teeth,omitempty"`
 	Services       []VisitService `json:"services"`
 	Subtotal       float64        `json:"subtotal"`
 	DiscountType   string         `json:"discount_type,omitempty"`
@@ -87,6 +103,7 @@ type VisitResponse struct {
 	Total          float64        `json:"total"`
 	DoctorShare    float64        `json:"doctor_share"`
 	DoctorEarning  float64        `json:"doctor_earning"`
+	PaymentType    string         `json:"payment_type,omitempty"`
 	CreatedAt      time.Time      `json:"created_at"`
 	CompletedAt    *time.Time     `json:"completed_at,omitempty"`
 }
@@ -101,6 +118,7 @@ func (v *Visit) ToResponse() VisitResponse {
 		Status:         v.Status,
 		Diagnosis:      v.Diagnosis,
 		Notes:          v.Notes,
+		AffectedTeeth:  v.AffectedTeeth,
 		Services:       v.Services,
 		Subtotal:       v.Subtotal,
 		DiscountType:   v.DiscountType,
@@ -109,6 +127,7 @@ func (v *Visit) ToResponse() VisitResponse {
 		Total:          v.Total,
 		DoctorShare:    v.DoctorShare,
 		DoctorEarning:  v.DoctorEarning,
+		PaymentType:    v.PaymentType,
 		CreatedAt:      v.CreatedAt,
 		CompletedAt:    v.CompletedAt,
 	}

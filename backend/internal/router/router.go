@@ -54,6 +54,7 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 	expenseRepo := repository.NewExpenseRepository(db)
 	salaryRepo := repository.NewStaffSalaryRepository(db)
 	auditRepo := repository.NewAuditLogRepository(db)
+	treatmentPlanRepo := repository.NewTreatmentPlanRepository(db)
 
 	// Initialize services
 	authService := service.NewAuthService(
@@ -74,13 +75,14 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 	expenseService := service.NewExpenseService(expenseRepo)
 	salaryService := service.NewStaffSalaryService(salaryRepo, userRepo)
 	auditService := service.NewAuditService(auditRepo)
+	treatmentPlanService := service.NewTreatmentPlanService(treatmentPlanRepo, patientRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService, userService)
 	superadminHandler := handler.NewSuperadminHandler(clinicService)
 	bossHandler := handler.NewBossHandler(userService, serviceService, reportService, contractService, expenseService, salaryService, auditService, userRepo)
 	receptionistHandler := handler.NewReceptionistHandler(patientService, appointmentService, userService)
-	doctorHandler := handler.NewDoctorHandler(appointmentService, visitService, serviceService, auditService)
+	doctorHandler := handler.NewDoctorHandler(appointmentService, visitService, serviceService, auditService, treatmentPlanService)
 	healthHandler := handler.NewHealthHandler(mongoClient)
 
 	// Health endpoints (no auth required)
@@ -108,6 +110,7 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			admin.GET("/clinics", superadminHandler.ListClinics)
 			admin.GET("/clinics/:id", superadminHandler.GetClinic)
 			admin.POST("/clinics/:id/invite", superadminHandler.InviteBoss)
+			admin.PATCH("/clinics/:id", superadminHandler.UpdateClinic)
 		}
 
 		// Boss routes
@@ -202,6 +205,11 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			doctor.PUT("/visits/:id/complete", doctorHandler.CompleteVisit)
 			doctor.GET("/services", doctorHandler.ListServices)
 			doctor.PUT("/appointments/:id/status", doctorHandler.UpdateAppointmentStatus)
+			// Treatment plans
+			doctor.POST("/treatment-plans", doctorHandler.CreateTreatmentPlan)
+			doctor.GET("/treatment-plans", doctorHandler.ListDoctorTreatmentPlans)
+			doctor.GET("/patients/:id/treatment-plans", doctorHandler.ListTreatmentPlansByPatient)
+			doctor.PUT("/treatment-plans/:id/steps/:step", doctorHandler.UpdateTreatmentPlanStep)
 		}
 	}
 
