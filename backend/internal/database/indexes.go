@@ -161,8 +161,35 @@ func GetIndexes() []IndexDefinition {
 	}
 }
 
+// DropDeprecatedIndexes removes old indexes that are no longer needed
+func DropDeprecatedIndexes(db *mongo.Database, log *logger.Logger) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// List of deprecated indexes to drop
+	deprecatedIndexes := []struct {
+		Collection string
+		IndexName  string
+	}{
+		{"users", "idx_users_email_unique"}, // Replaced with phone-based auth
+	}
+
+	for _, idx := range deprecatedIndexes {
+		collection := db.Collection(idx.Collection)
+		_, err := collection.Indexes().DropOne(ctx, idx.IndexName)
+		if err != nil {
+			log.Debugf("Could not drop deprecated index %s on %s: %v", idx.IndexName, idx.Collection, err)
+		} else {
+			log.Infof("Dropped deprecated index %s on %s", idx.IndexName, idx.Collection)
+		}
+	}
+}
+
 // CreateIndexes creates all required indexes (idempotent)
 func CreateIndexes(db *mongo.Database, log *logger.Logger) error {
+	// First, drop any deprecated indexes
+	DropDeprecatedIndexes(db, log)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
