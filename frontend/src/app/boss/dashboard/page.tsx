@@ -195,23 +195,50 @@ export default function BossDashboard() {
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            const data = new Uint8Array(event.target?.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+            try {
+                const data = new Uint8Array(event.target?.result as ArrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
 
-            // Skip header row, map columns: Nom, Tavsif, Narx, Davomiylik
-            const services = jsonData.slice(1).filter(row => row[0] && row[2]).map(row => ({
-                name: String(row[0] || '').trim(),
-                description: String(row[1] || '').trim(),
-                price: parseFloat(String(row[2] || '0').replace(/[^0-9.]/g, '')) || 0,
-                duration: parseInt(String(row[3] || '30').replace(/[^0-9]/g, '')) || 30
-            }));
+                if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                    alert('Excel faylda varaq topilmadi');
+                    return;
+                }
 
-            setServiceImportPreview(services);
-            setServiceImportResult(null);
-            setShowModal('importServices');
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+
+                if (!worksheet) {
+                    alert('Excel varaqni o\'qishda xatolik');
+                    return;
+                }
+
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+                if (!jsonData || jsonData.length < 2) {
+                    alert('Excel faylda ma\'lumot topilmadi. Birinchi qatorda sarlavhalar, keyin ma\'lumotlar bo\'lishi kerak.');
+                    return;
+                }
+
+                // Skip header row, map columns: Nom, Tavsif, Narx, Davomiylik
+                const services = jsonData.slice(1).filter(row => row && row[0] && row[2]).map(row => ({
+                    name: String(row[0] || '').trim(),
+                    description: String(row[1] || '').trim(),
+                    price: parseFloat(String(row[2] || '0').replace(/[^0-9.]/g, '')) || 0,
+                    duration: parseInt(String(row[3] || '30').replace(/[^0-9]/g, '')) || 30
+                }));
+
+                if (services.length === 0) {
+                    alert('Import qilinadigan xizmatlar topilmadi. Format: Nom | Tavsif | Narx | Davomiylik');
+                    return;
+                }
+
+                setServiceImportPreview(services);
+                setServiceImportResult(null);
+                setShowModal('importServices');
+            } catch (err: any) {
+                console.error('Excel import error:', err);
+                alert('Excel faylni o\'qishda xatolik: ' + (err.message || 'Noma\'lum xato'));
+            }
         };
         reader.readAsArrayBuffer(file);
         if (serviceFileRef.current) serviceFileRef.current.value = '';
