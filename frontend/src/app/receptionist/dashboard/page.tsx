@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Plus, Search, Settings, Upload, Download } from 'lucide-react';
+import { Plus, Search, Settings, Upload, Download, Calendar, Users, ClipboardList } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const INITIAL_PATIENT_FORM = { first_name: '', last_name: '', phone: '', gender: '' };
@@ -335,7 +335,7 @@ export default function ReceptionistDashboard() {
                 <div className="tabs">
                     <button className={`tab ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}>{t('appointments.today')}</button>
                     <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => setActiveTab('patients')}>{t('patients.title')}</button>
-                    <button className={`tab ${activeTab === 'jadval' ? 'active' : ''}`} onClick={() => setActiveTab('jadval')}>📅 Jadval</button>
+                    <button className={`tab ${activeTab === 'jadval' ? 'active' : ''}`} onClick={() => setActiveTab('jadval')}><ClipboardList size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Jadval</button>
                 </div>
 
                 {/* Stats Panel */}
@@ -480,7 +480,7 @@ export default function ReceptionistDashboard() {
                 {activeTab === 'jadval' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3>📋 Shifokorlar jadvali</h3>
+                            <h3><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Shifokorlar jadvali</h3>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <input
                                     className="input"
@@ -570,7 +570,7 @@ export default function ReceptionistDashboard() {
                                                     borderRadius: 4,
                                                     display: 'inline-block'
                                                 }}>
-                                                    📅 {date}
+                                                    <Calendar size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{date}
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                                     {appointments.map((a: any) => {
