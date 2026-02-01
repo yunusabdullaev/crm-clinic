@@ -23,6 +23,13 @@ export default function DoctorDashboard() {
     const [selectedVisit, setSelectedVisit] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    // Patient list state
+    const [patients, setPatients] = useState<any[]>([]);
+    const [patientSearch, setPatientSearch] = useState('');
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [patientVisits, setPatientVisits] = useState<any[]>([]);
+    const [selectedPatientVisit, setSelectedPatientVisit] = useState<any>(null);
+
     // History date filters
     const [historyDateFrom, setHistoryDateFrom] = useState(() => {
         const d = new Date();
@@ -118,6 +125,31 @@ export default function DoctorDashboard() {
             setVisitHistory(completedVisits);
         } catch (err: any) {
             console.error(err);
+        }
+    };
+
+    // Load patients for patient list
+    const loadPatients = async (search?: string) => {
+        try {
+            const data = await api.getPatients(1, search || patientSearch);
+            setPatients(data.patients || []);
+        } catch (err: any) {
+            console.error(err);
+        }
+    };
+
+    // Load patient visit history
+    const loadPatientVisits = async (patientId: string) => {
+        try {
+            const data = await api.getPatientVisits(patientId);
+            // Sort by date descending
+            const sorted = (data.visits || []).sort((a: any, b: any) =>
+                new Date(b.completed_at || b.created_at).getTime() - new Date(a.completed_at || a.created_at).getTime()
+            );
+            setPatientVisits(sorted);
+        } catch (err: any) {
+            console.error(err);
+            setPatientVisits([]);
         }
     };
 
@@ -268,6 +300,7 @@ export default function DoctorDashboard() {
                 <div className="tabs">
                     <button className={`tab ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>{t('appointments.title')}</button>
                     <button className={`tab ${activeTab === 'visits' ? 'active' : ''}`} onClick={() => setActiveTab('visits')}>{t('visits.today')}</button>
+                    <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => { setActiveTab('patients'); loadPatients(); }}>👥 Bemorlar</button>
                     <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); loadHistory(); }}>📋 Tarix</button>
                 </div>
 
@@ -449,6 +482,266 @@ export default function DoctorDashboard() {
                                 </strong>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {activeTab === 'patients' && (
+                    <div className="card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+                            <h3>👥 Bemorlar ro'yxati</h3>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <input
+                                    className="input"
+                                    placeholder="Bemor qidirish..."
+                                    value={patientSearch}
+                                    onChange={(e) => setPatientSearch(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && loadPatients()}
+                                    style={{ maxWidth: 250 }}
+                                />
+                                <button className="btn btn-primary" onClick={() => loadPatients()}>🔍 Qidirish</button>
+                            </div>
+                        </div>
+
+                        {!selectedPatient ? (
+                            // Patient list view
+                            <div>
+                                {patients.length > 0 ? (
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                                        {patients.map((p) => (
+                                            <div
+                                                key={p.id}
+                                                onClick={() => {
+                                                    setSelectedPatient(p);
+                                                    loadPatientVisits(p.id);
+                                                }}
+                                                style={{
+                                                    padding: 16,
+                                                    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                                                    borderRadius: 12,
+                                                    cursor: 'pointer',
+                                                    border: '1px solid #e2e8f0',
+                                                    transition: 'all 0.2s ease',
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                    <div style={{
+                                                        width: 48,
+                                                        height: 48,
+                                                        borderRadius: '50%',
+                                                        background: '#3b82f6',
+                                                        color: 'white',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontWeight: 'bold',
+                                                        fontSize: 18
+                                                    }}>
+                                                        {p.first_name?.[0]}{p.last_name?.[0]}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600 }}>{p.first_name} {p.last_name}</div>
+                                                        <div style={{ color: '#64748b', fontSize: 13 }}>{p.phone}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="empty-state" style={{ textAlign: 'center', padding: 40 }}>
+                                        <p>🔍 Bemor qidirish uchun ismni kiriting</p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            // Patient details with visit history
+                            <div>
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={() => { setSelectedPatient(null); setPatientVisits([]); setSelectedPatientVisit(null); }}
+                                    style={{ marginBottom: 16 }}
+                                >
+                                    ← Orqaga
+                                </button>
+
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                    color: 'white',
+                                    padding: 20,
+                                    borderRadius: 12,
+                                    marginBottom: 16
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                        <div style={{
+                                            width: 64,
+                                            height: 64,
+                                            borderRadius: '50%',
+                                            background: 'rgba(255,255,255,0.2)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontWeight: 'bold',
+                                            fontSize: 24
+                                        }}>
+                                            {selectedPatient.first_name?.[0]}{selectedPatient.last_name?.[0]}
+                                        </div>
+                                        <div>
+                                            <h2 style={{ margin: 0 }}>{selectedPatient.first_name} {selectedPatient.last_name}</h2>
+                                            <p style={{ margin: '4px 0 0', opacity: 0.9 }}>📞 {selectedPatient.phone}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h4 style={{ marginBottom: 12 }}>📋 Tashriflar tarixi</h4>
+                                {patientVisits.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        {patientVisits.map((v) => (
+                                            <div
+                                                key={v.id}
+                                                onClick={() => setSelectedPatientVisit(v)}
+                                                style={{
+                                                    padding: 16,
+                                                    background: v.status === 'completed' ? '#f0fdf4' : '#fef3c7',
+                                                    borderRadius: 8,
+                                                    cursor: 'pointer',
+                                                    border: '1px solid ' + (v.status === 'completed' ? '#86efac' : '#fcd34d'),
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600 }}>
+                                                            📅 {new Date(v.completed_at || v.created_at).toLocaleDateString('uz-UZ')}
+                                                        </div>
+                                                        <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+                                                            {v.diagnosis || 'Tashxis yo\'q'}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <span className={`badge badge-${v.status}`}>
+                                                            {v.status === 'completed' ? 'Yakunlangan' : 'Jarayonda'}
+                                                        </span>
+                                                        <div style={{ fontWeight: 600, color: '#059669', marginTop: 4 }}>
+                                                            {(v.total || 0).toLocaleString()} UZS
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="empty-state" style={{ textAlign: 'center', padding: 20 }}>
+                                        <p>📥 Bu bemorning tashriflari yo'q</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Patient Visit Details Modal */}
+                {selectedPatientVisit && (
+                    <div className="modal-overlay" onClick={() => setSelectedPatientVisit(null)}>
+                        <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
+                            <h2>📋 Tashrif tafsilotlari</h2>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                    <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
+                                        <div style={{ fontSize: 12, color: '#64748b' }}>Sana</div>
+                                        <div style={{ fontWeight: 600 }}>
+                                            {new Date(selectedPatientVisit.completed_at || selectedPatientVisit.created_at).toLocaleDateString('uz-UZ')}
+                                        </div>
+                                    </div>
+                                    <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
+                                        <div style={{ fontSize: 12, color: '#64748b' }}>Holat</div>
+                                        <span className={`badge badge-${selectedPatientVisit.status}`}>
+                                            {selectedPatientVisit.status === 'completed' ? 'Yakunlangan' : 'Jarayonda'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>🩺 Tashxis</label>
+                                <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                    {selectedPatientVisit.diagnosis || 'Tashxis kiritilmagan'}
+                                </div>
+                            </div>
+
+                            {selectedPatientVisit.affected_teeth?.length > 0 && (
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>🦷 Ta'sirlangan tishlar</label>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                        {selectedPatientVisit.affected_teeth.map((t: string) => (
+                                            <span key={t} style={{
+                                                padding: '4px 10px',
+                                                background: '#3b82f6',
+                                                color: 'white',
+                                                borderRadius: 12,
+                                                fontSize: 13
+                                            }}>{t}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedPatientVisit.services?.length > 0 && (
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>🛠️ Bajarilgan xizmatlar</label>
+                                    <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                        {selectedPatientVisit.services.map((s: any, i: number) => (
+                                            <div key={i} style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                padding: '8px 0',
+                                                borderBottom: i < selectedPatientVisit.services.length - 1 ? '1px solid #e2e8f0' : 'none'
+                                            }}>
+                                                <span>{s.name || s.service_name} x{s.quantity}</span>
+                                                <span style={{ fontWeight: 600 }}>{((s.price || 0) * (s.quantity || 1)).toLocaleString()} UZS</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedPatientVisit.xray_images?.length > 0 && (
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>📷 Rentgen rasmlar</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8 }}>
+                                        {selectedPatientVisit.xray_images.map((url: string, i: number) => (
+                                            <img
+                                                key={i}
+                                                src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`}
+                                                alt={`Rentgen ${i + 1}`}
+                                                style={{
+                                                    width: '100%',
+                                                    aspectRatio: '1',
+                                                    objectFit: 'cover',
+                                                    borderRadius: 8,
+                                                    cursor: 'pointer'
+                                                }}
+                                                onClick={() => setXrayPreviewImage(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`)}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{
+                                background: '#f0fdf4',
+                                padding: 16,
+                                borderRadius: 8,
+                                textAlign: 'right',
+                                marginBottom: 16
+                            }}>
+                                <strong style={{ fontSize: 18, color: '#059669' }}>
+                                    Jami: {(selectedPatientVisit.total || 0).toLocaleString()} UZS
+                                </strong>
+                            </div>
+
+                            <button className="btn btn-secondary" onClick={() => setSelectedPatientVisit(null)}>Yopish</button>
+                        </div>
                     </div>
                 )}
                 {showModal === 'complete' && (

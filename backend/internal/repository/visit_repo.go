@@ -275,3 +275,30 @@ func (r *VisitRepository) GetOlderIncompleteVisit(ctx context.Context, clinicID,
 
 	return nil, mongo.ErrNoDocuments
 }
+
+// ListByPatient returns all visits for a specific patient
+func (r *VisitRepository) ListByPatient(ctx context.Context, clinicID, patientID primitive.ObjectID) ([]models.Visit, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	filter := bson.M{
+		"clinic_id":  clinicID,
+		"patient_id": patientID,
+	}
+
+	// Sort by created_at descending (newest first)
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var visits []models.Visit
+	if err := cursor.All(ctx, &visits); err != nil {
+		return nil, err
+	}
+
+	return visits, nil
+}

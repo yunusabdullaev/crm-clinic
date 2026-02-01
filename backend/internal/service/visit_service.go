@@ -341,3 +341,31 @@ func (s *VisitService) SaveDraft(ctx context.Context, id, clinicID primitive.Obj
 
 	return visit, nil
 }
+
+// ListByPatient returns all visits for a specific patient
+func (s *VisitService) ListByPatient(ctx context.Context, clinicID, patientID primitive.ObjectID) ([]models.VisitResponse, error) {
+	visits, err := s.visitRepo.ListByPatient(ctx, clinicID, patientID)
+	if err != nil {
+		return nil, apperrors.InternalWithErr("Failed to get patient visits", err)
+	}
+
+	var responses []models.VisitResponse
+	for _, v := range visits {
+		resp := v.ToResponse()
+
+		// Fetch patient name
+		patient, err := s.patientRepo.GetByID(ctx, v.PatientID, clinicID)
+		if err == nil {
+			resp.PatientName = patient.FirstName + " " + patient.LastName
+		}
+
+		responses = append(responses, resp)
+	}
+
+	// Return empty slice if no visits
+	if responses == nil {
+		responses = []models.VisitResponse{}
+	}
+
+	return responses, nil
+}

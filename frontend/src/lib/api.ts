@@ -195,6 +195,10 @@ class ApiClient {
         return this.request<{ visits: any[] }>('GET', `/api/v1/doctor/visits?from=${from}&to=${to}`);
     }
 
+    async getPatientVisits(patientId: string) {
+        return this.request<{ visits: any[] }>('GET', `/api/v1/doctor/patients/${patientId}/visits`);
+    }
+
     async saveVisitDraft(visitId: string, data: any) {
         return this.request('PUT', `/api/v1/doctor/visits/${visitId}/draft`, data);
     }

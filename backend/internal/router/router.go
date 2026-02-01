@@ -222,6 +222,8 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			doctor.GET("/treatment-plans", doctorHandler.ListDoctorTreatmentPlans)
 			doctor.GET("/patients/:id/treatment-plans", doctorHandler.ListTreatmentPlansByPatient)
 			doctor.PUT("/treatment-plans/:id/steps/:step", doctorHandler.UpdateTreatmentPlanStep)
+			// Patient visits history
+			doctor.GET("/patients/:id/visits", doctorHandler.GetPatientVisits)
 			// X-ray image uploads
 			doctor.POST("/uploads/image", uploadHandler.UploadImage)
 			doctor.DELETE("/uploads/image", uploadHandler.DeleteImage)

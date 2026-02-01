@@ -522,3 +522,42 @@ func (h *DoctorHandler) UpdateTreatmentPlanStep(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Treatment plan step updated"})
 }
+
+// GetPatientVisits returns all visits for a specific patient
+// GET /api/v1/doctor/patients/:id/visits
+func (h *DoctorHandler) GetPatientVisits(c *gin.Context) {
+	requestID := c.GetString("request_id")
+	clinicIDStr := middleware.GetClinicID(c)
+	if clinicIDStr == "" {
+		appErr := apperrors.Unauthorized("Clinic not found in context")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+	clinicID, err := primitive.ObjectIDFromHex(clinicIDStr)
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid clinic ID")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	patientIDStr := c.Param("id")
+	patientID, err := primitive.ObjectIDFromHex(patientIDStr)
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid patient ID")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	visits, err := h.visitService.ListByPatient(c.Request.Context(), clinicID, patientID)
+	if err != nil {
+		if appErr, ok := err.(*apperrors.AppError); ok {
+			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+			return
+		}
+		appErr := apperrors.Internal("Failed to get patient visits")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"visits": visits})
+}
