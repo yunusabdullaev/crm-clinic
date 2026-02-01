@@ -206,6 +206,7 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			doctor.POST("/visits", doctorHandler.StartVisit)
 			doctor.GET("/visits/:id", doctorHandler.GetVisit)
 			doctor.PUT("/visits/:id/complete", doctorHandler.CompleteVisit)
+			doctor.PUT("/visits/:id/draft", doctorHandler.SaveVisitDraft)
 			doctor.GET("/services", doctorHandler.ListServices)
 			doctor.PUT("/appointments/:id/status", doctorHandler.UpdateAppointmentStatus)
 			// Treatment plans

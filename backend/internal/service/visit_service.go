@@ -233,3 +233,89 @@ func (s *VisitService) ListByDoctor(ctx context.Context, clinicID, doctorID prim
 
 	return responses, nil
 }
+
+// SaveDraft saves visit progress/draft without completing
+func (s *VisitService) SaveDraft(ctx context.Context, id, clinicID primitive.ObjectID, dto models.SaveVisitDraftDTO) (*models.Visit, error) {
+	visit, err := s.visitRepo.GetByID(ctx, id, clinicID)
+	if err != nil {
+		return nil, apperrors.NotFound("Visit")
+	}
+
+	if visit.Status == models.VisitStatusCompleted {
+		return nil, apperrors.BadRequest("Cannot edit completed visit")
+	}
+
+	// Update diagnosis
+	if dto.Diagnosis != "" {
+		visit.Diagnosis = dto.Diagnosis
+	}
+
+	// Update comment
+	visit.Comment = dto.Comment
+
+	// Update affected teeth
+	if dto.AffectedTeeth != nil {
+		visit.AffectedTeeth = dto.AffectedTeeth
+	}
+
+	// Update plan steps
+	if dto.PlanSteps != nil {
+		visit.PlanSteps = dto.PlanSteps
+	}
+
+	// Update discount
+	if dto.DiscountType != "" {
+		visit.DiscountType = dto.DiscountType
+		visit.DiscountValue = dto.DiscountValue
+	}
+
+	// Update payment type
+	if dto.PaymentType != "" {
+		visit.PaymentType = dto.PaymentType
+	}
+
+	// Update services if provided
+	if len(dto.Services) > 0 {
+		visit.Services = []models.VisitService{}
+		serviceIDs := make([]primitive.ObjectID, 0, len(dto.Services))
+		serviceQuantities := make(map[string]int)
+
+		for _, svc := range dto.Services {
+			serviceID, err := primitive.ObjectIDFromHex(svc.ServiceID)
+			if err != nil {
+				continue // Skip invalid service IDs
+			}
+			serviceIDs = append(serviceIDs, serviceID)
+			serviceQuantities[svc.ServiceID] = svc.Quantity
+		}
+
+		if len(serviceIDs) > 0 {
+			services, err := s.serviceRepo.GetMultipleByIDs(ctx, serviceIDs, clinicID)
+			if err == nil {
+				for _, svc := range services {
+					quantity := serviceQuantities[svc.ID.Hex()]
+					if quantity <= 0 {
+						quantity = 1
+					}
+					visit.Services = append(visit.Services, models.VisitService{
+						ServiceID:   svc.ID,
+						ServiceName: svc.Name,
+						Price:       svc.Price,
+						Quantity:    quantity,
+					})
+				}
+			}
+		}
+
+		// Calculate totals
+		visit.CalculateTotal()
+	}
+
+	visit.UpdatedAt = time.Now().UTC()
+
+	if err := s.visitRepo.Update(ctx, visit); err != nil {
+		return nil, apperrors.InternalWithErr("Failed to save visit draft", err)
+	}
+
+	return visit, nil
+}

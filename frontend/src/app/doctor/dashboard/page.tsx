@@ -740,10 +740,31 @@ export default function DoctorDashboard() {
                                         type="button"
                                         className="btn btn-secondary"
                                         style={{ flex: 1 }}
-                                        onClick={() => {
-                                            // Save for later - just close modal, treatment plan is tracked separately
-                                            alert(t('treatmentPlan.saved'));
-                                            setShowModal(null);
+                                        onClick={async () => {
+                                            if (!selectedVisit) return;
+                                            try {
+                                                await api.saveVisitDraft(selectedVisit.id, {
+                                                    diagnosis: visitForm.diagnosis,
+                                                    services: visitForm.services,
+                                                    discount_type: visitForm.discount_type,
+                                                    discount_value: visitForm.discount_value,
+                                                    payment_type: visitForm.payment_type,
+                                                    affected_teeth: visitForm.affected_teeth,
+                                                    plan_steps: visitForm.planSteps.map((ps: any) => ({
+                                                        description: ps.description || ps,
+                                                        completed: ps.completed || false
+                                                    })),
+                                                    comment: visitForm.comment
+                                                });
+                                                alert(t('treatmentPlan.saved'));
+                                                // Reload visits to get updated data
+                                                const today = new Date().toISOString().split('T')[0];
+                                                const visitsData = await api.getVisits(today);
+                                                setVisits(visitsData.visits || []);
+                                                setShowModal(null);
+                                            } catch (err: any) {
+                                                alert('Xatolik: ' + (err.message || 'Saqlashda xato'));
+                                            }
                                         }}
                                     >{t('treatmentPlan.save')}</button>
                                     <button type="submit" className="btn btn-success" style={{ flex: 1 }}>{t('treatmentPlan.finish')}</button>

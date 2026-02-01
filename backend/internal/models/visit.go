@@ -32,6 +32,12 @@ type VisitService struct {
 	Subtotal    float64            `bson:"subtotal" json:"subtotal"` // Price * Quantity
 }
 
+// VisitPlanStep represents a simple step in visit draft treatment plan
+type VisitPlanStep struct {
+	Description string `bson:"description" json:"description"`
+	Completed   bool   `bson:"completed" json:"completed"`
+}
+
 // Visit represents a patient visit/consultation
 type Visit struct {
 	ID             primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
@@ -43,7 +49,9 @@ type Visit struct {
 	Status         string              `bson:"status" json:"status"`
 	Diagnosis      string              `bson:"diagnosis,omitempty" json:"diagnosis,omitempty"`
 	Notes          string              `bson:"notes,omitempty" json:"notes,omitempty"`
+	Comment        string              `bson:"comment,omitempty" json:"comment,omitempty"`
 	AffectedTeeth  []string            `bson:"affected_teeth,omitempty" json:"affected_teeth,omitempty"`
+	PlanSteps      []VisitPlanStep     `bson:"plan_steps,omitempty" json:"plan_steps,omitempty"`
 	Services       []VisitService      `bson:"services" json:"services"`
 	Subtotal       float64             `bson:"subtotal" json:"subtotal"`                               // Sum of all services
 	DiscountType   string              `bson:"discount_type,omitempty" json:"discount_type,omitempty"` // "percentage" or "fixed"
@@ -82,30 +90,45 @@ type CompleteVisitDTO struct {
 	// DoctorShare is now determined by the active doctor contract, not submitted by the doctor
 }
 
+// SaveVisitDraftDTO is the input for saving visit draft/progress
+type SaveVisitDraftDTO struct {
+	Diagnosis     string               `json:"diagnosis,omitempty"`
+	Services      []AddVisitServiceDTO `json:"services,omitempty"`
+	DiscountType  string               `json:"discount_type,omitempty" binding:"omitempty,oneof=percentage fixed"`
+	DiscountValue float64              `json:"discount_value,omitempty" binding:"omitempty,gte=0"`
+	PaymentType   string               `json:"payment_type,omitempty" binding:"omitempty,oneof=cash card"`
+	AffectedTeeth []string             `json:"affected_teeth,omitempty"`
+	PlanSteps     []VisitPlanStep      `json:"plan_steps,omitempty"`
+	Comment       string               `json:"comment,omitempty"`
+}
+
 // VisitResponse is the API response for a visit
 type VisitResponse struct {
-	ID             string         `json:"id"`
-	AppointmentID  string         `json:"appointment_id,omitempty"`
-	PatientID      string         `json:"patient_id"`
-	PatientName    string         `json:"patient_name,omitempty"`
-	DoctorID       string         `json:"doctor_id"`
-	DoctorName     string         `json:"doctor_name,omitempty"`
-	Date           string         `json:"date"`
-	Status         string         `json:"status"`
-	Diagnosis      string         `json:"diagnosis,omitempty"`
-	Notes          string         `json:"notes,omitempty"`
-	AffectedTeeth  []string       `json:"affected_teeth,omitempty"`
-	Services       []VisitService `json:"services"`
-	Subtotal       float64        `json:"subtotal"`
-	DiscountType   string         `json:"discount_type,omitempty"`
-	DiscountValue  float64        `json:"discount_value"`
-	DiscountAmount float64        `json:"discount_amount"`
-	Total          float64        `json:"total"`
-	DoctorShare    float64        `json:"doctor_share"`
-	DoctorEarning  float64        `json:"doctor_earning"`
-	PaymentType    string         `json:"payment_type,omitempty"`
-	CreatedAt      time.Time      `json:"created_at"`
-	CompletedAt    *time.Time     `json:"completed_at,omitempty"`
+	ID             string          `json:"id"`
+	AppointmentID  string          `json:"appointment_id,omitempty"`
+	PatientID      string          `json:"patient_id"`
+	PatientName    string          `json:"patient_name,omitempty"`
+	DoctorID       string          `json:"doctor_id"`
+	DoctorName     string          `json:"doctor_name,omitempty"`
+	Date           string          `json:"date"`
+	Status         string          `json:"status"`
+	Diagnosis      string          `json:"diagnosis,omitempty"`
+	Notes          string          `json:"notes,omitempty"`
+	Comment        string          `json:"comment,omitempty"`
+	AffectedTeeth  []string        `json:"affected_teeth,omitempty"`
+	PlanSteps      []VisitPlanStep `json:"plan_steps,omitempty"`
+	Services       []VisitService  `json:"services"`
+	Subtotal       float64         `json:"subtotal"`
+	DiscountType   string          `json:"discount_type,omitempty"`
+	DiscountValue  float64         `json:"discount_value"`
+	DiscountAmount float64         `json:"discount_amount"`
+	Total          float64         `json:"total"`
+	TotalAmount    float64         `json:"total_amount"`
+	DoctorShare    float64         `json:"doctor_share"`
+	DoctorEarning  float64         `json:"doctor_earning"`
+	PaymentType    string          `json:"payment_type,omitempty"`
+	CreatedAt      time.Time       `json:"created_at"`
+	CompletedAt    *time.Time      `json:"completed_at,omitempty"`
 }
 
 // ToResponse converts Visit to VisitResponse
@@ -118,13 +141,16 @@ func (v *Visit) ToResponse() VisitResponse {
 		Status:         v.Status,
 		Diagnosis:      v.Diagnosis,
 		Notes:          v.Notes,
+		Comment:        v.Comment,
 		AffectedTeeth:  v.AffectedTeeth,
+		PlanSteps:      v.PlanSteps,
 		Services:       v.Services,
 		Subtotal:       v.Subtotal,
 		DiscountType:   v.DiscountType,
 		DiscountValue:  v.DiscountValue,
 		DiscountAmount: v.DiscountAmount,
 		Total:          v.Total,
+		TotalAmount:    v.Total,
 		DoctorShare:    v.DoctorShare,
 		DoctorEarning:  v.DoctorEarning,
 		PaymentType:    v.PaymentType,

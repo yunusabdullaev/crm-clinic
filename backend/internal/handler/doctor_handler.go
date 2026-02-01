@@ -212,6 +212,46 @@ func (h *DoctorHandler) CompleteVisit(c *gin.Context) {
 	c.JSON(http.StatusOK, visit.ToResponse())
 }
 
+// SaveVisitDraft saves visit progress/draft without completing
+// PUT /api/v1/doctor/visits/:id/draft
+func (h *DoctorHandler) SaveVisitDraft(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	clinicID, err := middleware.GetClinicObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Clinic not found in token")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	visitID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid visit ID")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	var dto models.SaveVisitDraftDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		appErr := apperrors.Validation("Invalid request body: " + err.Error())
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	visit, err := h.visitService.SaveDraft(c.Request.Context(), visitID, clinicID, dto)
+	if err != nil {
+		if appErr, ok := err.(*apperrors.AppError); ok {
+			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+			return
+		}
+		appErr := apperrors.Internal("Failed to save visit draft")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	c.JSON(http.StatusOK, visit.ToResponse())
+}
+
 // ListTodayVisits returns doctor's visits for today
 // GET /api/v1/doctor/visits
 func (h *DoctorHandler) ListTodayVisits(c *gin.Context) {
