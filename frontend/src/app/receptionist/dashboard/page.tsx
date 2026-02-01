@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Plus, Search, Settings, Upload } from 'lucide-react';
+import { Plus, Search, Settings, Upload, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const INITIAL_PATIENT_FORM = { first_name: '', last_name: '', phone: '', gender: '' };
@@ -168,6 +168,27 @@ export default function ReceptionistDashboard() {
         } finally {
             setImporting(false);
         }
+    };
+
+    // Export patients to Excel
+    const exportPatientsToExcel = () => {
+        if (patients.length === 0) {
+            alert('Eksport qilish uchun bemorlar mavjud emas');
+            return;
+        }
+
+        const exportData = patients.map((p: any) => ({
+            'Ism': p.first_name || '-',
+            'Familiya': p.last_name || '-',
+            'Telefon': p.phone || '-',
+            'Jinsi': p.gender === 'male' ? 'Erkak' : p.gender === 'female' ? 'Ayol' : '-',
+            'Ro\'yxatga olingan': new Date(p.created_at).toLocaleDateString('uz-UZ')
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Bemorlar');
+        XLSX.writeFile(workbook, `bemorlar_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const handleCreatePatient = async (e: React.FormEvent) => {
@@ -384,6 +405,9 @@ export default function ReceptionistDashboard() {
                                 />
                                 <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
                                     <Upload size={16} style={{ marginRight: 4 }} /> Excel import
+                                </button>
+                                <button className="btn btn-success" onClick={exportPatientsToExcel} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <Download size={16} /> Excel export
                                 </button>
                                 <button className="btn btn-primary" onClick={() => openModal('patient')}>{t('patients.add')}</button>
                             </div>

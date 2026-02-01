@@ -199,6 +199,35 @@ class ApiClient {
         return this.request('PUT', `/api/v1/doctor/visits/${visitId}/draft`, data);
     }
 
+    // X-ray image upload
+    async uploadXrayImage(file: File): Promise<{ url: string; filename: string; size: number }> {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const token = this.getToken();
+        const headers: Record<string, string> = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${this.baseUrl}/api/v1/doctor/uploads/image`, {
+            method: 'POST',
+            headers,
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || 'Failed to upload image');
+        }
+
+        return response.json();
+    }
+
+    async deleteXrayImage(url: string): Promise<void> {
+        await this.request('DELETE', '/api/v1/doctor/uploads/image', { url });
+    }
+
     // Services
     async getServices() {
         return this.request<{ services: any[] }>('GET', '/api/v1/doctor/services');

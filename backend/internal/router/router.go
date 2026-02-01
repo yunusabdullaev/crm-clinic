@@ -8,6 +8,7 @@ import (
 	"medical-crm/internal/repository"
 	"medical-crm/internal/service"
 	"medical-crm/pkg/logger"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -85,10 +86,17 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 	doctorHandler := handler.NewDoctorHandler(appointmentService, visitService, serviceService, auditService, treatmentPlanService)
 	healthHandler := handler.NewHealthHandler(mongoClient)
 
+	// Upload handler - uploads directory
+	uploadDir := filepath.Join("public", "uploads", "xray")
+	uploadHandler := handler.NewUploadHandler(uploadDir)
+
 	// Health endpoints (no auth required)
 	r.GET("/health", healthHandler.Health)
 	r.GET("/ready", healthHandler.Ready)
 	r.GET("/metrics", healthHandler.Metrics)
+
+	// Serve uploaded files (static)
+	r.Static("/uploads", "./public/uploads")
 
 	// API v1 routes
 	v1 := r.Group("/api/v1")
@@ -214,6 +222,9 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			doctor.GET("/treatment-plans", doctorHandler.ListDoctorTreatmentPlans)
 			doctor.GET("/patients/:id/treatment-plans", doctorHandler.ListTreatmentPlansByPatient)
 			doctor.PUT("/treatment-plans/:id/steps/:step", doctorHandler.UpdateTreatmentPlanStep)
+			// X-ray image uploads
+			doctor.POST("/uploads/image", uploadHandler.UploadImage)
+			doctor.DELETE("/uploads/image", uploadHandler.DeleteImage)
 		}
 	}
 

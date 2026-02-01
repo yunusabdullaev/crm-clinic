@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Settings } from 'lucide-react';
+import { Settings, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export default function DoctorDashboard() {
     const router = useRouter();
@@ -48,7 +49,12 @@ export default function DoctorDashboard() {
         affected_teeth: [] as string[],
         planSteps: [] as { description: string; completed: boolean }[],
         comment: '',
+        xray_images: [] as string[],
     });
+
+    // X-ray upload state
+    const [xrayUploading, setXrayUploading] = useState(false);
+    const [xrayPreviewImage, setXrayPreviewImage] = useState<string | null>(null);
 
     // Tooth numbers for the dental formula
     const upperTeeth = ['18', '17', '16', '15', '14', '13', '12', '11', '21', '22', '23', '24', '25', '26', '27', '28'];
@@ -115,6 +121,28 @@ export default function DoctorDashboard() {
         }
     };
 
+    // Export history to Excel
+    const exportHistoryToExcel = () => {
+        if (visitHistory.length === 0) {
+            alert('Eksport qilish uchun tarix mavjud emas');
+            return;
+        }
+
+        const exportData = visitHistory.map((v: any) => ({
+            'Sana': new Date(v.completed_at || v.created_at).toLocaleDateString('uz-UZ'),
+            'Bemor': v.patient_name || '-',
+            'Tashxis': v.diagnosis || '-',
+            'Xizmatlar': (v.services || []).map((s: any) => `${s.service_name} x${s.quantity}`).join(', '),
+            'To\'lov turi': v.payment_type === 'cash' ? 'Naqd' : 'Karta',
+            'Jami summa': v.total || v.total_amount || 0
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Vizitlar tarixi');
+        XLSX.writeFile(workbook, `vizitlar_tarixi_${historyDateFrom}_${historyDateTo}.xlsx`);
+    };
+
     const handleLogout = () => {
         api.logout();
         router.push('/login');
@@ -147,6 +175,7 @@ export default function DoctorDashboard() {
                 completed: step.completed || false
             })),
             comment: visit.comment || '',
+            xray_images: visit.xray_images || [],
         });
         setShowModal('complete');
     };
@@ -356,6 +385,9 @@ export default function DoctorDashboard() {
                                     style={{ maxWidth: 150 }}
                                 />
                                 <button className="btn btn-primary" onClick={loadHistory}>🔍 Qidirish</button>
+                                <button className="btn btn-success" onClick={exportHistoryToExcel} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <Download size={16} /> Excel
+                                </button>
                             </div>
                         </div>
 
@@ -788,6 +820,141 @@ export default function DoctorDashboard() {
                                         placeholder="Qo'shimcha izohlar..."
                                     />
                                 </div>
+                                {/* X-ray Image Upload Section */}
+                                <div className="form-group">
+                                    <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}>📷 Rentgen fotolari</label>
+                                    <div style={{
+                                        background: '#f8fafc',
+                                        borderRadius: 12,
+                                        padding: 16,
+                                        border: '2px dashed #cbd5e1'
+                                    }}>
+                                        {/* Upload button */}
+                                        <div style={{ marginBottom: 12 }}>
+                                            <input
+                                                type="file"
+                                                id="xray-upload"
+                                                accept="image/*"
+                                                multiple
+                                                style={{ display: 'none' }}
+                                                onChange={async (e) => {
+                                                    const files = e.target.files;
+                                                    if (!files || files.length === 0) return;
+
+                                                    setXrayUploading(true);
+                                                    try {
+                                                        const uploadedUrls: string[] = [];
+                                                        for (let i = 0; i < files.length; i++) {
+                                                            const result = await api.uploadXrayImage(files[i]);
+                                                            uploadedUrls.push(result.url);
+                                                        }
+                                                        setVisitForm(prev => ({
+                                                            ...prev,
+                                                            xray_images: [...prev.xray_images, ...uploadedUrls]
+                                                        }));
+                                                    } catch (err: any) {
+                                                        alert('Rasm yuklashda xatolik: ' + (err.message || 'Xatolik'));
+                                                    } finally {
+                                                        setXrayUploading(false);
+                                                        e.target.value = '';
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById('xray-upload')?.click()}
+                                                disabled={xrayUploading}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 8,
+                                                    padding: '10px 16px',
+                                                    background: xrayUploading ? '#94a3b8' : '#3b82f6',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: 8,
+                                                    cursor: xrayUploading ? 'wait' : 'pointer',
+                                                    fontWeight: 500
+                                                }}
+                                            >
+                                                {xrayUploading ? '⏳ Yuklanmoqda...' : '+ Rasm yuklash'}
+                                            </button>
+                                        </div>
+
+                                        {/* Thumbnails grid */}
+                                        {visitForm.xray_images.length > 0 && (
+                                            <div style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                                                gap: 8,
+                                                marginTop: 8
+                                            }}>
+                                                {visitForm.xray_images.map((url, index) => (
+                                                    <div key={index} style={{
+                                                        position: 'relative',
+                                                        paddingTop: '100%',
+                                                        borderRadius: 8,
+                                                        overflow: 'hidden',
+                                                        border: '1px solid #e2e8f0',
+                                                        background: '#fff'
+                                                    }}>
+                                                        <img
+                                                            src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`}
+                                                            alt={`Rentgen ${index + 1}`}
+                                                            onClick={() => setXrayPreviewImage(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`)}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: 0,
+                                                                left: 0,
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'cover',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await api.deleteXrayImage(url);
+                                                                    setVisitForm(prev => ({
+                                                                        ...prev,
+                                                                        xray_images: prev.xray_images.filter((_, i) => i !== index)
+                                                                    }));
+                                                                } catch (err: any) {
+                                                                    alert('O\'chirishda xatolik: ' + (err.message || 'Xatolik'));
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: 4,
+                                                                right: 4,
+                                                                width: 22,
+                                                                height: 22,
+                                                                borderRadius: '50%',
+                                                                background: '#ef4444',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                fontSize: 12,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontWeight: 'bold'
+                                                            }}
+                                                        >×</button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {visitForm.xray_images.length === 0 && (
+                                            <p style={{ color: '#94a3b8', fontSize: 13, margin: 0, textAlign: 'center' }}>
+                                                Rentgen rasmlarini yuklash uchun tugmani bosing
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                                 <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
                                     <strong>{t('visits.total')}: {calculateTotal().toLocaleString()} UZS</strong>
                                 </div>
@@ -810,7 +977,8 @@ export default function DoctorDashboard() {
                                                         description: ps.description || ps,
                                                         completed: ps.completed || false
                                                     })),
-                                                    comment: visitForm.comment
+                                                    comment: visitForm.comment,
+                                                    xray_images: visitForm.xray_images
                                                 });
                                                 alert(t('treatmentPlan.saved'));
                                                 // Reload visits to get updated data
@@ -828,6 +996,52 @@ export default function DoctorDashboard() {
                                 </div>
                             </form>
                         </div>
+                    </div>
+                )}
+                {/* X-ray Preview Modal */}
+                {xrayPreviewImage && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0,0,0,0.9)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1100,
+                            cursor: 'pointer'
+                        }}
+                        onClick={() => setXrayPreviewImage(null)}
+                    >
+                        <img
+                            src={xrayPreviewImage}
+                            alt="Rentgen kattalashtirish"
+                            style={{
+                                maxWidth: '90vw',
+                                maxHeight: '90vh',
+                                objectFit: 'contain',
+                                borderRadius: 8
+                            }}
+                        />
+                        <button
+                            onClick={() => setXrayPreviewImage(null)}
+                            style={{
+                                position: 'absolute',
+                                top: 20,
+                                right: 20,
+                                width: 40,
+                                height: 40,
+                                borderRadius: '50%',
+                                background: 'rgba(255,255,255,0.2)',
+                                color: 'white',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: 20
+                            }}
+                        >×</button>
                     </div>
                 )}
             </div>

@@ -192,6 +192,7 @@ func (s *VisitService) CompleteVisit(ctx context.Context, id, clinicID primitive
 	visit.Diagnosis = dto.Diagnosis
 	visit.Notes = dto.Notes
 	visit.AffectedTeeth = dto.AffectedTeeth
+	visit.XRayImages = dto.XRayImages
 	visit.PaymentType = dto.PaymentType
 	visit.Status = models.VisitStatusCompleted
 	now := time.Now().UTC()
@@ -261,6 +262,11 @@ func (s *VisitService) SaveDraft(ctx context.Context, id, clinicID primitive.Obj
 	// Update plan steps
 	if dto.PlanSteps != nil {
 		visit.PlanSteps = dto.PlanSteps
+	}
+
+	// Update X-ray images
+	if dto.XRayImages != nil {
+		visit.XRayImages = dto.XRayImages
 	}
 
 	// Update discount

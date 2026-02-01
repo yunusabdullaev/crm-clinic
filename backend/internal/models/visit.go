@@ -52,6 +52,7 @@ type Visit struct {
 	Comment        string              `bson:"comment,omitempty" json:"comment,omitempty"`
 	AffectedTeeth  []string            `bson:"affected_teeth,omitempty" json:"affected_teeth,omitempty"`
 	PlanSteps      []VisitPlanStep     `bson:"plan_steps,omitempty" json:"plan_steps,omitempty"`
+	XRayImages     []string            `bson:"xray_images,omitempty" json:"xray_images,omitempty"`
 	Services       []VisitService      `bson:"services" json:"services"`
 	Subtotal       float64             `bson:"subtotal" json:"subtotal"`                               // Sum of all services
 	DiscountType   string              `bson:"discount_type,omitempty" json:"discount_type,omitempty"` // "percentage" or "fixed"
@@ -87,6 +88,7 @@ type CompleteVisitDTO struct {
 	DiscountValue float64              `json:"discount_value,omitempty" binding:"omitempty,gte=0"`
 	PaymentType   string               `json:"payment_type" binding:"required,oneof=cash card"`
 	AffectedTeeth []string             `json:"affected_teeth,omitempty"`
+	XRayImages    []string             `json:"xray_images,omitempty"`
 	// DoctorShare is now determined by the active doctor contract, not submitted by the doctor
 }
 
@@ -100,6 +102,7 @@ type SaveVisitDraftDTO struct {
 	AffectedTeeth []string             `json:"affected_teeth,omitempty"`
 	PlanSteps     []VisitPlanStep      `json:"plan_steps,omitempty"`
 	Comment       string               `json:"comment,omitempty"`
+	XRayImages    []string             `json:"xray_images,omitempty"`
 }
 
 // VisitResponse is the API response for a visit
@@ -117,6 +120,7 @@ type VisitResponse struct {
 	Comment        string          `json:"comment,omitempty"`
 	AffectedTeeth  []string        `json:"affected_teeth,omitempty"`
 	PlanSteps      []VisitPlanStep `json:"plan_steps,omitempty"`
+	XRayImages     []string        `json:"xray_images,omitempty"`
 	Services       []VisitService  `json:"services"`
 	Subtotal       float64         `json:"subtotal"`
 	DiscountType   string          `json:"discount_type,omitempty"`
@@ -144,6 +148,7 @@ func (v *Visit) ToResponse() VisitResponse {
 		Comment:        v.Comment,
 		AffectedTeeth:  v.AffectedTeeth,
 		PlanSteps:      v.PlanSteps,
+		XRayImages:     v.XRayImages,
 		Services:       v.Services,
 		Subtotal:       v.Subtotal,
 		DiscountType:   v.DiscountType,

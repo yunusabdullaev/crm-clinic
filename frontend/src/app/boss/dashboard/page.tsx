@@ -7,7 +7,7 @@ import { useSettings } from '@/lib/settings';
 import {
     BarChart3, Users, Briefcase, FileText, Receipt, Wallet,
     Activity, Settings, LogOut, Plus, Trash2, UserPlus, Building2,
-    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload, Eye, EyeOff
+    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload, Eye, EyeOff, Download
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useRef } from 'react';
@@ -118,6 +118,27 @@ export default function BossDashboard() {
         } catch (err: any) {
             console.error('Failed to load audit logs:', err);
         }
+    };
+
+    // Export services to Excel
+    const exportServicesToExcel = () => {
+        if (services.length === 0) {
+            alert('Eksport qilish uchun xizmatlar mavjud emas');
+            return;
+        }
+
+        const exportData = services.map((s: any) => ({
+            'Nomi': s.name || '-',
+            'Tavsif': s.description || '-',
+            'Narxi (UZS)': s.price || 0,
+            'Davomiyligi (daqiqa)': s.duration || 30,
+            'Faol': s.is_active ? 'Ha' : 'Yo\'q'
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Xizmatlar');
+        XLSX.writeFile(workbook, `xizmatlar_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const openModal = (modal: string) => {
@@ -367,6 +388,9 @@ export default function BossDashboard() {
                                 />
                                 <button className="btn btn-secondary" onClick={() => serviceFileRef.current?.click()}>
                                     <Upload size={16} style={{ marginRight: 4 }} /> Excel import
+                                </button>
+                                <button className="btn btn-success" onClick={exportServicesToExcel} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <Download size={16} /> Excel export
                                 </button>
                                 <button className="btn btn-primary" onClick={() => openModal('service')}><Plus size={16} style={{ marginRight: '4px' }} />{t('services.add')}</button>
                             </div>
