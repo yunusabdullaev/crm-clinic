@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Plus, Search, Settings, Upload, Download, Calendar, Users, ClipboardList } from 'lucide-react';
+import { Plus, Search, Settings, Upload, Download, Calendar, Users, ClipboardList, Monitor } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const INITIAL_PATIENT_FORM = { first_name: '', last_name: '', phone: '', gender: '' };
@@ -333,8 +333,8 @@ export default function ReceptionistDashboard() {
                 </div>
 
                 <div className="tabs">
-                    <button className={`tab ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}>{t('appointments.today')}</button>
-                    <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => setActiveTab('patients')}>{t('patients.title')}</button>
+                    <button className={`tab ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}><Calendar size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('appointments.today')}</button>
+                    <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => setActiveTab('patients')}><Users size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('patients.title')}</button>
                     <button className={`tab ${activeTab === 'jadval' ? 'active' : ''}`} onClick={() => setActiveTab('jadval')}><ClipboardList size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Jadval</button>
                 </div>
 
@@ -439,7 +439,7 @@ export default function ReceptionistDashboard() {
                 {activeTab === 'appointments' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                            <h3>📅 Bugungi navbatlar ({today})</h3>
+                            <h3><Calendar size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Bugungi navbatlar ({today})</h3>
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <button className="btn btn-primary" onClick={() => openModal('appointment')}>{t('appointments.book')}</button>
                                 <button
@@ -447,7 +447,7 @@ export default function ReceptionistDashboard() {
                                     onClick={() => window.open('/display', 'navbatlar_display', 'width=1200,height=800')}
                                     style={{ backgroundColor: '#8b5cf6' }}
                                 >
-                                    📺 Ekranga chiqarish
+                                    <Monitor size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ekranga chiqarish
                                 </button>
                             </div>
                         </div>
