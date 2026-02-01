@@ -6,6 +6,10 @@ import { I18nProvider } from '@/lib/i18n';
 export const metadata: Metadata = {
     title: 'Medical CRM',
     description: 'Multi-tenant Medical CRM System',
+    icons: {
+        icon: '/icon.png',
+        apple: '/icon.png',
+    },
 };
 
 export default function RootLayout({
