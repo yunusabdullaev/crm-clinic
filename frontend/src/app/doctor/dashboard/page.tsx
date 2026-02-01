@@ -129,15 +129,22 @@ export default function DoctorDashboard() {
 
     const openCompleteVisit = (visit: any) => {
         setSelectedVisit(visit);
+        // Load existing draft data if available
         setVisitForm({
-            diagnosis: '',
-            services: [],
-            discount_type: '',
-            discount_value: 0,
-            payment_type: 'cash',
-            affected_teeth: [],
-            planSteps: [],
-            comment: '',
+            diagnosis: visit.diagnosis || '',
+            services: (visit.services || []).map((s: any) => ({
+                service_id: s.service_id || s.id,
+                quantity: s.quantity || 1
+            })),
+            discount_type: visit.discount_type || '',
+            discount_value: visit.discount_value || 0,
+            payment_type: visit.payment_type || 'cash',
+            affected_teeth: visit.affected_teeth || [],
+            planSteps: (visit.plan_steps || []).map((step: any) => ({
+                description: step.description || step,
+                completed: step.completed || false
+            })),
+            comment: visit.comment || '',
         });
         setShowModal('complete');
     };
