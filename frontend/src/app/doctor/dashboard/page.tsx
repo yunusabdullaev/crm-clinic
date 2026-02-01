@@ -400,7 +400,7 @@ export default function DoctorDashboard() {
                 {activeTab === 'history' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3>📋 Bajarilgan ishlar tarixi</h3>
+                            <h3><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Bajarilgan ishlar tarixi</h3>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <input
                                     className="input"
@@ -417,7 +417,7 @@ export default function DoctorDashboard() {
                                     onChange={(e) => setHistoryDateTo(e.target.value)}
                                     style={{ maxWidth: 150 }}
                                 />
-                                <button className="btn btn-primary" onClick={loadHistory}>🔍 Qidirish</button>
+                                <button className="btn btn-primary" onClick={loadHistory}><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Qidirish</button>
                                 <button className="btn btn-success" onClick={exportHistoryToExcel} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                     <Download size={16} /> Excel
                                 </button>
