@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Plus, Search, Settings, Upload, Download, Calendar, Users, ClipboardList, Monitor } from 'lucide-react';
+import { Plus, Search, Settings, Upload, Download, Calendar, Users, ClipboardList, Monitor, UserX } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const INITIAL_PATIENT_FORM = { first_name: '', last_name: '', phone: '', gender: '' };
@@ -370,12 +370,7 @@ export default function ReceptionistDashboard() {
 
                     <div className="stats-panel-item">
                         <div className="stats-panel-icon red">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <line x1="17" y1="8" x2="23" y2="14" />
-                                <line x1="23" y1="8" x2="17" y2="14" />
-                            </svg>
+                            <UserX size={24} stroke="#ef4444" strokeWidth={2} />
                         </div>
                         <div>
                             <div className="stats-panel-value">{todayAppointments.filter(a => a.status === 'cancelled' || a.status === 'no_show').length}</div>
