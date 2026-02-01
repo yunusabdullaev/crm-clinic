@@ -21,7 +21,7 @@ type Invitation struct {
 
 // CreateInviteDTO is the input for creating an invitation
 type CreateInviteDTO struct {
-	Email string `json:"email" binding:"required,email"`
+	Email string `json:"email" binding:"required"` // Actually phone number now
 }
 
 // InviteResponse is the API response for an invitation
