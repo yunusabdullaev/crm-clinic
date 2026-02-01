@@ -49,6 +49,7 @@ type AcceptInviteDTO struct {
 	Password  string `json:"password" binding:"required,min=8"`
 	FirstName string `json:"first_name" binding:"required,min=1,max=50"`
 	LastName  string `json:"last_name" binding:"required,min=1,max=50"`
+	Phone     string `json:"phone" binding:"required"`
 }
 
 // RefreshTokenDTO is the input for refreshing tokens

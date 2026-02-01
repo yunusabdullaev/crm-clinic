@@ -99,11 +99,11 @@ class ApiClient {
         return response;
     }
 
-    async acceptInvite(token: string, password: string, firstName: string, lastName: string) {
+    async acceptInvite(token: string, password: string, firstName: string, lastName: string, phone: string) {
         return this.request(
             'POST',
             '/api/v1/auth/accept-invite',
-            { token, password, first_name: firstName, last_name: lastName },
+            { token, password, first_name: firstName, last_name: lastName, phone },
             false
         );
     }

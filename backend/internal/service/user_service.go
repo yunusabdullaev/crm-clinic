@@ -47,10 +47,10 @@ func (s *UserService) AcceptInvite(ctx context.Context, dto models.AcceptInviteD
 		return nil, apperrors.InviteUsed()
 	}
 
-	// Check if user already exists
-	existingUser, _ := s.userRepo.GetByEmail(ctx, invitation.Email)
+	// Check if user with this phone already exists
+	existingUser, _ := s.userRepo.GetByPhone(ctx, dto.Phone)
 	if existingUser != nil {
-		return nil, apperrors.Conflict("User with this email already exists")
+		return nil, apperrors.Conflict("Bu telefon raqami bilan foydalanuvchi allaqachon mavjud")
 	}
 
 	// Hash password
@@ -59,9 +59,9 @@ func (s *UserService) AcceptInvite(ctx context.Context, dto models.AcceptInviteD
 		return nil, err
 	}
 
-	// Create user
+	// Create user with phone from request
 	user := &models.User{
-		Phone:        invitation.Email,
+		Phone:        dto.Phone,
 		PasswordHash: passwordHash,
 		FirstName:    dto.FirstName,
 		LastName:     dto.LastName,
