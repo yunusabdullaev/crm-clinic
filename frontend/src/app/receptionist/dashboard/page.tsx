@@ -480,7 +480,7 @@ export default function ReceptionistDashboard() {
                 {activeTab === 'jadval' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3>📋 Barcha navbatlar</h3>
+                            <h3>📋 Shifokorlar jadvali</h3>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <input
                                     className="input"
@@ -501,31 +501,126 @@ export default function ReceptionistDashboard() {
                                 <button className="btn btn-primary" onClick={() => openModal('appointment')}>{t('appointments.book')}</button>
                             </div>
                         </div>
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th>{t('common.time')}</th>
-                                    <th>{t('common.date')}</th>
-                                    <th>{t('appointments.patient')}</th>
-                                    <th>{t('appointments.doctor')}</th>
-                                    <th>{t('common.status')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {allAppointments.map((a) => (
-                                    <tr key={a.id}>
-                                        <td>{new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                                        <td>{new Date(a.start_time).toLocaleDateString()}</td>
-                                        <td>{a.patient_name || 'Unknown'}</td>
-                                        <td>{a.doctor_name || 'Unknown'}</td>
-                                        <td><span className={`badge badge-${a.status}`}>{t(`status.${a.status}`)}</span></td>
-                                    </tr>
-                                ))}
-                                {allAppointments.length === 0 && (
-                                    <tr><td colSpan={5} className="empty-state">{t('appointments.noAppointments')}</td></tr>
-                                )}
-                            </tbody>
-                        </table>
+
+                        {/* Doctor Schedule Cards */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {doctors.map((doctor) => {
+                                const doctorAppointments = allAppointments
+                                    .filter(a => a.doctor_id === doctor.id)
+                                    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+                                if (doctorAppointments.length === 0) return null;
+
+                                // Group by date
+                                const groupedByDate: { [date: string]: any[] } = {};
+                                doctorAppointments.forEach(a => {
+                                    const date = new Date(a.start_time).toLocaleDateString('uz-UZ');
+                                    if (!groupedByDate[date]) groupedByDate[date] = [];
+                                    groupedByDate[date].push(a);
+                                });
+
+                                return (
+                                    <div key={doctor.id} style={{
+                                        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                                        borderRadius: 12,
+                                        padding: 16,
+                                        border: '1px solid #e2e8f0'
+                                    }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 12,
+                                            marginBottom: 12,
+                                            paddingBottom: 12,
+                                            borderBottom: '2px solid #3b82f6'
+                                        }}>
+                                            <div style={{
+                                                width: 48,
+                                                height: 48,
+                                                borderRadius: '50%',
+                                                background: '#3b82f6',
+                                                color: 'white',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontWeight: 'bold',
+                                                fontSize: 18
+                                            }}>
+                                                {doctor.first_name?.[0]}{doctor.last_name?.[0]}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: 600, fontSize: 16 }}>
+                                                    Dr. {doctor.first_name} {doctor.last_name}
+                                                </div>
+                                                <div style={{ color: '#64748b', fontSize: 13 }}>
+                                                    {doctorAppointments.length} ta navbat
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {Object.entries(groupedByDate).map(([date, appointments]) => (
+                                            <div key={date} style={{ marginBottom: 12 }}>
+                                                <div style={{
+                                                    fontWeight: 600,
+                                                    fontSize: 13,
+                                                    color: '#475569',
+                                                    marginBottom: 8,
+                                                    padding: '4px 8px',
+                                                    background: '#e2e8f0',
+                                                    borderRadius: 4,
+                                                    display: 'inline-block'
+                                                }}>
+                                                    📅 {date}
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                    {appointments.map((a: any) => {
+                                                        const startTime = new Date(a.start_time);
+                                                        const endTime = new Date(startTime.getTime() + 15 * 60000); // 15 min slots
+                                                        return (
+                                                            <div key={a.id} style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 12,
+                                                                padding: '10px 14px',
+                                                                background: 'white',
+                                                                borderRadius: 8,
+                                                                border: '1px solid #e2e8f0',
+                                                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                                            }}>
+                                                                <div style={{
+                                                                    fontWeight: 600,
+                                                                    color: '#3b82f6',
+                                                                    fontSize: 14,
+                                                                    minWidth: 100
+                                                                }}>
+                                                                    {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    {' - '}
+                                                                    {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </div>
+                                                                <div style={{ flex: 1 }}>
+                                                                    <span style={{ fontWeight: 500 }}>
+                                                                        {a.patient_name || 'Noma\'lum bemor'}
+                                                                    </span>
+                                                                </div>
+                                                                <span className={`badge badge-${a.status}`} style={{ fontSize: 11 }}>
+                                                                    {t(`status.${a.status}`)}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })}
+
+                            {allAppointments.length === 0 && (
+                                <div className="empty-state" style={{ textAlign: 'center', padding: 40 }}>
+                                    {t('appointments.noAppointments')}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
