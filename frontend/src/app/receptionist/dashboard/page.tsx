@@ -12,7 +12,7 @@ const INITIAL_APPOINTMENT_FORM = { patient_id: '', doctor_id: '', date: '', hour
 
 // Working hours (09:00 - 00:00)
 const HOURS = [...Array.from({ length: 15 }, (_, i) => (9 + i).toString().padStart(2, '0')), '00'];
-const MINUTES = ['00', '30'];
+const MINUTES = ['00', '15', '30', '45'];
 
 export default function ReceptionistDashboard() {
     const router = useRouter();
