@@ -167,10 +167,10 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			boss.GET("/audit-logs", bossHandler.GetAuditLogs)
 		}
 
-		// Patient routes (receptionist and boss can access)
+		// Patient routes (all clinic staff can read, receptionist and boss can modify)
 		patients := v1.Group("/patients")
 		patients.Use(middleware.Auth(cfg.JWTAccessSecret))
-		patients.Use(middleware.BossOrReceptionist())
+		patients.Use(middleware.ClinicStaff())
 		patients.Use(middleware.TenantIsolation())
 		{
 			patients.POST("", receptionistHandler.CreatePatient)
