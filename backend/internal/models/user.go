@@ -30,7 +30,7 @@ type User struct {
 
 // CreateUserDTO is the input for creating a user (by Boss)
 type CreateUserDTO struct {
-	Phone     string `json:"phone" binding:"required,min=9,max=12"`
+	Phone     string `json:"phone" binding:"required,min=9,max=13"`
 	FirstName string `json:"first_name" binding:"required,min=1,max=50"`
 	LastName  string `json:"last_name" binding:"required,min=1,max=50"`
 	Role      string `json:"role" binding:"required,oneof=doctor receptionist"`
