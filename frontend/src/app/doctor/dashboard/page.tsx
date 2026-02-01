@@ -486,39 +486,92 @@ export default function DoctorDashboard() {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>{t('nav.services')}</label>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
-                                        {services.map((s) => (
-                                            <button
-                                                key={s.id}
-                                                type="button"
-                                                className="btn btn-secondary"
-                                                style={{ fontSize: 12 }}
-                                                onClick={() => handleAddService(s.id)}
-                                            >
-                                                + {s.name} (${s.price})
-                                            </button>
-                                        ))}
+                                    <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}>{t('nav.services')}</label>
+                                    <div style={{
+                                        background: '#fff',
+                                        borderRadius: 12,
+                                        border: '1px solid #e2e8f0',
+                                        maxHeight: 300,
+                                        overflowY: 'auto'
+                                    }}>
+                                        {services.map((s) => {
+                                            const selectedService = visitForm.services.find((vs) => vs.service_id === s.id);
+                                            const isSelected = !!selectedService;
+                                            return (
+                                                <div key={s.id} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    padding: '12px 16px',
+                                                    borderBottom: '1px solid #f1f5f9',
+                                                    background: isSelected ? '#f0fdf4' : 'transparent',
+                                                    cursor: 'pointer',
+                                                    transition: 'background 0.2s'
+                                                }}
+                                                    onClick={() => {
+                                                        if (isSelected) {
+                                                            handleRemoveService(s.id);
+                                                        } else {
+                                                            handleAddService(s.id);
+                                                        }
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            readOnly
+                                                            style={{ width: 18, height: 18, accentColor: '#22c55e', cursor: 'pointer' }}
+                                                        />
+                                                        <div>
+                                                            <div style={{ fontWeight: 500, color: '#1f2937', fontSize: 14 }}>{s.name}</div>
+                                                            <div style={{ fontSize: 12, color: '#64748b' }}>{s.price.toLocaleString()} UZS</div>
+                                                        </div>
+                                                    </div>
+                                                    {isSelected && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} onClick={(e) => e.stopPropagation()}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    if (selectedService!.quantity > 1) {
+                                                                        setVisitForm({
+                                                                            ...visitForm,
+                                                                            services: visitForm.services.map((vs) =>
+                                                                                vs.service_id === s.id ? { ...vs, quantity: vs.quantity - 1 } : vs
+                                                                            ),
+                                                                        });
+                                                                    } else {
+                                                                        handleRemoveService(s.id);
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    width: 28, height: 28, borderRadius: 6,
+                                                                    background: '#fee2e2', color: '#dc2626',
+                                                                    border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 'bold'
+                                                                }}
+                                                            >−</button>
+                                                            <span style={{ minWidth: 24, textAlign: 'center', fontWeight: 600 }}>{selectedService!.quantity}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleAddService(s.id)}
+                                                                style={{
+                                                                    width: 28, height: 28, borderRadius: 6,
+                                                                    background: '#dcfce7', color: '#16a34a',
+                                                                    border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 'bold'
+                                                                }}
+                                                            >+</button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                     {visitForm.services.length > 0 && (
-                                        <table className="table">
-                                            <thead>
-                                                <tr><th>{t('table.service')}</th><th>{t('common.price')}</th><th>{t('services.qty')}</th><th></th></tr>
-                                            </thead>
-                                            <tbody>
-                                                {visitForm.services.map((vs) => {
-                                                    const service = services.find((s) => s.id === vs.service_id);
-                                                    return (
-                                                        <tr key={vs.service_id}>
-                                                            <td>{service?.name}</td>
-                                                            <td>${service?.price}</td>
-                                                            <td>{vs.quantity}</td>
-                                                            <td><button type="button" className="btn btn-danger" style={{ padding: '4px 8px' }} onClick={() => handleRemoveService(vs.service_id)}>×</button></td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
+                                        <div style={{ marginTop: 12, padding: 12, background: '#f0fdf4', borderRadius: 8 }}>
+                                            <div style={{ fontSize: 13, color: '#15803d', fontWeight: 500 }}>
+                                                ✓ Tanlangan: {visitForm.services.length} ta xizmat
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                                 {canDiscount && (
