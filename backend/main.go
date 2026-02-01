@@ -97,9 +97,9 @@ func main() {
 func seedSuperadmin(cfg *config.Config, db *mongo.Database, log *logger.Logger) {
 	ctx := context.Background()
 
-	// Check if superadmin exists
+	// Check if superadmin exists by role
 	var existingAdmin bson.M
-	err := db.Collection("users").FindOne(ctx, bson.M{"email": cfg.SuperadminEmail}).Decode(&existingAdmin)
+	err := db.Collection("users").FindOne(ctx, bson.M{"role": "superadmin"}).Decode(&existingAdmin)
 	if err == nil {
 		log.Info("Superadmin already exists")
 		return
@@ -116,9 +116,9 @@ func seedSuperadmin(cfg *config.Config, db *mongo.Database, log *logger.Logger) 
 		return
 	}
 
-	// Create superadmin
+	// Create superadmin with phone
 	admin := bson.M{
-		"email":         cfg.SuperadminEmail,
+		"phone":         cfg.SuperadminEmail, // Using SuperadminEmail config as phone for now
 		"password_hash": string(hash),
 		"first_name":    "Super",
 		"last_name":     "Admin",
@@ -133,7 +133,7 @@ func seedSuperadmin(cfg *config.Config, db *mongo.Database, log *logger.Logger) 
 		log.Error("Failed to create superadmin", err)
 		return
 	}
-	log.Infof("Created superadmin: %s", cfg.SuperadminEmail)
+	log.Infof("Created superadmin with phone: %s", cfg.SuperadminEmail)
 }
 
 // runSeed creates the initial superadmin and sample data
@@ -154,9 +154,9 @@ func runSeed(cfg *config.Config, log *logger.Logger) {
 
 	ctx := context.Background()
 
-	// Check if superadmin exists
+	// Check if superadmin exists by role
 	var existingAdmin bson.M
-	err = db.Collection("users").FindOne(ctx, bson.M{"email": cfg.SuperadminEmail}).Decode(&existingAdmin)
+	err = db.Collection("users").FindOne(ctx, bson.M{"role": "superadmin"}).Decode(&existingAdmin)
 	if err == nil {
 		log.Info("Superadmin already exists, skipping creation")
 	} else if err == mongo.ErrNoDocuments {
@@ -166,9 +166,9 @@ func runSeed(cfg *config.Config, log *logger.Logger) {
 			log.Fatal("Failed to hash password", err)
 		}
 
-		// Create superadmin
+		// Create superadmin with phone
 		admin := bson.M{
-			"email":         cfg.SuperadminEmail,
+			"phone":         cfg.SuperadminEmail,
 			"password_hash": string(hash),
 			"first_name":    "Super",
 			"last_name":     "Admin",
@@ -182,7 +182,7 @@ func runSeed(cfg *config.Config, log *logger.Logger) {
 		if err != nil {
 			log.Fatal("Failed to create superadmin", err)
 		}
-		log.Infof("Created superadmin: %s", cfg.SuperadminEmail)
+		log.Infof("Created superadmin with phone: %s", cfg.SuperadminEmail)
 	}
 
 	// Check if sample clinic exists
@@ -211,7 +211,7 @@ func runSeed(cfg *config.Config, log *logger.Logger) {
 
 	fmt.Println("\n✅ Seed completed successfully!")
 	fmt.Printf("\nSuperadmin credentials:\n")
-	fmt.Printf("  Email: %s\n", cfg.SuperadminEmail)
+	fmt.Printf("  Phone: %s\n", cfg.SuperadminEmail)
 	fmt.Printf("  Password: %s\n", cfg.SuperadminPassword)
 	fmt.Println("\nYou can now login and create clinics.")
 }
