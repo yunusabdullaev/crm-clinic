@@ -191,6 +191,10 @@ class ApiClient {
         return this.request<{ visits: any[] }>('GET', `/api/v1/doctor/visits?date=${date}`);
     }
 
+    async getVisitHistory(from: string, to: string) {
+        return this.request<{ visits: any[] }>('GET', `/api/v1/doctor/visits?from=${from}&to=${to}`);
+    }
+
     // Services
     async getServices() {
         return this.request<{ services: any[] }>('GET', '/api/v1/doctor/services');

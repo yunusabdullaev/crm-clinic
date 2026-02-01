@@ -13,11 +13,20 @@ export default function DoctorDashboard() {
     const [activeTab, setActiveTab] = useState('schedule');
     const [appointments, setAppointments] = useState<any[]>([]);
     const [visits, setVisits] = useState<any[]>([]);
+    const [visitHistory, setVisitHistory] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [showModal, setShowModal] = useState<string | null>(null);
     const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
     const [selectedVisit, setSelectedVisit] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+
+    // History date filters
+    const [historyDateFrom, setHistoryDateFrom] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 30); // Last 30 days
+        return d.toISOString().split('T')[0];
+    });
+    const [historyDateTo, setHistoryDateTo] = useState(new Date().toISOString().split('T')[0]);
 
     // Date filters
     const [dateFrom, setDateFrom] = useState(new Date().toISOString().split('T')[0]);
@@ -88,6 +97,19 @@ export default function DoctorDashboard() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadHistory = async () => {
+        try {
+            const historyData = await api.getVisitHistory(historyDateFrom, historyDateTo);
+            // Filter only completed visits
+            const completedVisits = (historyData.visits || []).filter((v: any) => v.status === 'completed');
+            // Sort by date descending
+            completedVisits.sort((a: any, b: any) => new Date(b.completed_at || b.created_at).getTime() - new Date(a.completed_at || a.created_at).getTime());
+            setVisitHistory(completedVisits);
+        } catch (err: any) {
+            console.error(err);
         }
     };
 
@@ -208,6 +230,7 @@ export default function DoctorDashboard() {
                 <div className="tabs">
                     <button className={`tab ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>{t('appointments.title')}</button>
                     <button className={`tab ${activeTab === 'visits' ? 'active' : ''}`} onClick={() => setActiveTab('visits')}>{t('visits.today')}</button>
+                    <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); loadHistory(); }}>📋 Tarix</button>
                 </div>
 
                 {activeTab === 'schedule' && (
@@ -303,6 +326,90 @@ export default function DoctorDashboard() {
                     </div>
                 )}
 
+                {activeTab === 'history' && (
+                    <div className="card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+                            <h3>📋 Bajarilgan ishlar tarixi</h3>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <input
+                                    className="input"
+                                    type="date"
+                                    value={historyDateFrom}
+                                    onChange={(e) => setHistoryDateFrom(e.target.value)}
+                                    style={{ maxWidth: 150 }}
+                                />
+                                <span>{t('common.to')}</span>
+                                <input
+                                    className="input"
+                                    type="date"
+                                    value={historyDateTo}
+                                    onChange={(e) => setHistoryDateTo(e.target.value)}
+                                    style={{ maxWidth: 150 }}
+                                />
+                                <button className="btn btn-primary" onClick={loadHistory}>🔍 Qidirish</button>
+                            </div>
+                        </div>
+
+                        {visitHistory.length > 0 ? (
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sana</th>
+                                            <th>Bemor</th>
+                                            <th>Tashxis</th>
+                                            <th>Xizmatlar</th>
+                                            <th>Jami</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {visitHistory.map((v) => (
+                                            <tr key={v.id}>
+                                                <td>{new Date(v.completed_at || v.created_at).toLocaleString()}</td>
+                                                <td>{v.patient_name || 'Noma\'lum'}</td>
+                                                <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {v.diagnosis || '-'}
+                                                </td>
+                                                <td>
+                                                    {(v.services || []).map((s: any, i: number) => (
+                                                        <span key={i} style={{
+                                                            display: 'inline-block',
+                                                            background: '#e0f2fe',
+                                                            padding: '2px 8px',
+                                                            borderRadius: 4,
+                                                            fontSize: 12,
+                                                            marginRight: 4,
+                                                            marginBottom: 2
+                                                        }}>
+                                                            {s.name || s.service_name} x{s.quantity}
+                                                        </span>
+                                                    ))}
+                                                </td>
+                                                <td style={{ fontWeight: 600, color: '#059669' }}>
+                                                    {(v.total_amount || 0).toLocaleString()} UZS
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="empty-state">
+                                <p>📭 Bu davrda yakunlangan vizitlar topilmadi</p>
+                                <p style={{ fontSize: 14, color: '#64748b' }}>Sanalarni o'zgartiring va "Qidirish" tugmasini bosing</p>
+                            </div>
+                        )}
+
+                        {visitHistory.length > 0 && (
+                            <div style={{ marginTop: 16, padding: 16, background: '#f0fdf4', borderRadius: 8, textAlign: 'right' }}>
+                                <strong style={{ color: '#15803d' }}>
+                                    Jami: {visitHistory.length} ta vizit |
+                                    {' '}{visitHistory.reduce((sum, v) => sum + (v.total_amount || 0), 0).toLocaleString()} UZS
+                                </strong>
+                            </div>
+                        )}
+                    </div>
+                )}
                 {showModal === 'complete' && (
                     <div className="modal-overlay" onClick={() => setShowModal(null)}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
