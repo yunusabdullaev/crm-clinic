@@ -1,13 +1,15 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"medical-crm/internal/middleware"
 	"medical-crm/internal/models"
 	"medical-crm/internal/service"
 	apperrors "medical-crm/pkg/errors"
+
+	"github.com/gin-gonic/gin"
 )
 
 type AuthHandler struct {
@@ -88,6 +90,7 @@ func (h *AuthHandler) AcceptInvite(c *gin.Context) {
 
 	response, err := h.userService.AcceptInvite(c.Request.Context(), dto)
 	if err != nil {
+		fmt.Printf("AcceptInvite failed: error=%s, phone=%s\n", err.Error(), dto.Phone)
 		if appErr, ok := err.(*apperrors.AppError); ok {
 			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
 			return
