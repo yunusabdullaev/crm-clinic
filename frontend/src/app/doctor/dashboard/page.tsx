@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Settings, Download } from 'lucide-react';
+import { Settings, Download, Users, History, Calendar, Stethoscope, Search, Phone, ClipboardList, ArrowLeft, Inbox, FileText, Activity, Wrench, Camera } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function DoctorDashboard() {
@@ -298,10 +298,10 @@ export default function DoctorDashboard() {
                 </div>
 
                 <div className="tabs">
-                    <button className={`tab ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>{t('appointments.title')}</button>
-                    <button className={`tab ${activeTab === 'visits' ? 'active' : ''}`} onClick={() => setActiveTab('visits')}>{t('visits.today')}</button>
-                    <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => { setActiveTab('patients'); loadPatients(); }}>👥 Bemorlar</button>
-                    <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); loadHistory(); }}>📋 Tarix</button>
+                    <button className={`tab ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}><Calendar size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('appointments.title')}</button>
+                    <button className={`tab ${activeTab === 'visits' ? 'active' : ''}`} onClick={() => setActiveTab('visits')}><Stethoscope size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('visits.today')}</button>
+                    <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => { setActiveTab('patients'); loadPatients(); }}><Users size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bemorlar</button>
+                    <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); loadHistory(); }}><History size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Tarix</button>
                 </div>
 
                 {activeTab === 'schedule' && (
@@ -488,7 +488,7 @@ export default function DoctorDashboard() {
                 {activeTab === 'patients' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3>👥 Bemorlar ro'yxati</h3>
+                            <h3><Users size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Bemorlar ro'yxati</h3>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <input
                                     className="input"
@@ -498,7 +498,7 @@ export default function DoctorDashboard() {
                                     onKeyDown={(e) => e.key === 'Enter' && loadPatients()}
                                     style={{ maxWidth: 250 }}
                                 />
-                                <button className="btn btn-primary" onClick={() => loadPatients()}>🔍 Qidirish</button>
+                                <button className="btn btn-primary" onClick={() => loadPatients()}><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Qidirish</button>
                             </div>
                         </div>
 
@@ -550,7 +550,7 @@ export default function DoctorDashboard() {
                                     </div>
                                 ) : (
                                     <div className="empty-state" style={{ textAlign: 'center', padding: 40 }}>
-                                        <p>🔍 Bemor qidirish uchun ismni kiriting</p>
+                                        <p><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bemor qidirish uchun ismni kiriting</p>
                                     </div>
                                 )}
                             </div>
@@ -562,7 +562,7 @@ export default function DoctorDashboard() {
                                     onClick={() => { setSelectedPatient(null); setPatientVisits([]); setSelectedPatientVisit(null); }}
                                     style={{ marginBottom: 16 }}
                                 >
-                                    ← Orqaga
+                                    <ArrowLeft size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Orqaga
                                 </button>
 
                                 <div style={{
@@ -588,12 +588,12 @@ export default function DoctorDashboard() {
                                         </div>
                                         <div>
                                             <h2 style={{ margin: 0 }}>{selectedPatient.first_name} {selectedPatient.last_name}</h2>
-                                            <p style={{ margin: '4px 0 0', opacity: 0.9 }}>📞 {selectedPatient.phone}</p>
+                                            <p style={{ margin: '4px 0 0', opacity: 0.9 }}><Phone size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{selectedPatient.phone}</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <h4 style={{ marginBottom: 12 }}>📋 Tashriflar tarixi</h4>
+                                <h4 style={{ marginBottom: 12 }}><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Tashriflar tarixi</h4>
                                 {patientVisits.length > 0 ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                         {patientVisits.map((v) => (
@@ -611,7 +611,7 @@ export default function DoctorDashboard() {
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <div>
                                                         <div style={{ fontWeight: 600 }}>
-                                                            📅 {new Date(v.completed_at || v.created_at).toLocaleDateString('uz-UZ')}
+                                                            <Calendar size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{new Date(v.completed_at || v.created_at).toLocaleDateString('uz-UZ')}
                                                         </div>
                                                         <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
                                                             {v.diagnosis || 'Tashxis yo\'q'}
@@ -631,7 +631,7 @@ export default function DoctorDashboard() {
                                     </div>
                                 ) : (
                                     <div className="empty-state" style={{ textAlign: 'center', padding: 20 }}>
-                                        <p>📥 Bu bemorning tashriflari yo'q</p>
+                                        <p><Inbox size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bu bemorning tashriflari yo'q</p>
                                     </div>
                                 )}
                             </div>
@@ -643,7 +643,7 @@ export default function DoctorDashboard() {
                 {selectedPatientVisit && (
                     <div className="modal-overlay" onClick={() => setSelectedPatientVisit(null)}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
-                            <h2>📋 Tashrif tafsilotlari</h2>
+                            <h2><ClipboardList size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />Tashrif tafsilotlari</h2>
 
                             <div style={{ marginBottom: 16 }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -663,7 +663,7 @@ export default function DoctorDashboard() {
                             </div>
 
                             <div style={{ marginBottom: 16 }}>
-                                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>🩺 Tashxis</label>
+                                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Activity size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Tashxis</label>
                                 <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
                                     {selectedPatientVisit.diagnosis || 'Tashxis kiritilmagan'}
                                 </div>
@@ -671,7 +671,7 @@ export default function DoctorDashboard() {
 
                             {selectedPatientVisit.affected_teeth?.length > 0 && (
                                 <div style={{ marginBottom: 16 }}>
-                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>🦷 Ta'sirlangan tishlar</label>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><FileText size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ta'sirlangan tishlar</label>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                         {selectedPatientVisit.affected_teeth.map((t: string) => (
                                             <span key={t} style={{
@@ -688,7 +688,7 @@ export default function DoctorDashboard() {
 
                             {selectedPatientVisit.services?.length > 0 && (
                                 <div style={{ marginBottom: 16 }}>
-                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>🛠️ Bajarilgan xizmatlar</label>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Wrench size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bajarilgan xizmatlar</label>
                                     <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
                                         {selectedPatientVisit.services.map((s: any, i: number) => (
                                             <div key={i} style={{
@@ -707,7 +707,7 @@ export default function DoctorDashboard() {
 
                             {selectedPatientVisit.xray_images?.length > 0 && (
                                 <div style={{ marginBottom: 16 }}>
-                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>📷 Rentgen rasmlar</label>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Camera size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Rentgen rasmlar</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8 }}>
                                         {selectedPatientVisit.xray_images.map((url: string, i: number) => (
                                             <img
