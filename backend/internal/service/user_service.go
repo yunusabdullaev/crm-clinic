@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"medical-crm/internal/models"
 	"medical-crm/internal/repository"
 	apperrors "medical-crm/pkg/errors"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserService struct {
@@ -60,7 +61,7 @@ func (s *UserService) AcceptInvite(ctx context.Context, dto models.AcceptInviteD
 
 	// Create user
 	user := &models.User{
-		Email:        invitation.Email,
+		Phone:        invitation.Email,
 		PasswordHash: passwordHash,
 		FirstName:    dto.FirstName,
 		LastName:     dto.LastName,
@@ -88,10 +89,10 @@ func (s *UserService) CreateUser(ctx context.Context, dto models.CreateUserDTO, 
 		return nil, apperrors.Forbidden("You cannot create users with this role")
 	}
 
-	// Check if email already exists
-	existingUser, _ := s.userRepo.GetByEmail(ctx, dto.Email)
+	// Check if phone already exists
+	existingUser, _ := s.userRepo.GetByPhone(ctx, dto.Phone)
 	if existingUser != nil {
-		return nil, apperrors.Conflict("User with this email already exists")
+		return nil, apperrors.Conflict("User with this phone already exists")
 	}
 
 	// Hash password
@@ -101,7 +102,7 @@ func (s *UserService) CreateUser(ctx context.Context, dto models.CreateUserDTO, 
 	}
 
 	user := &models.User{
-		Email:        dto.Email,
+		Phone:        dto.Phone,
 		PasswordHash: passwordHash,
 		FirstName:    dto.FirstName,
 		LastName:     dto.LastName,
@@ -169,7 +170,7 @@ func (s *UserService) CreateSuperadmin(ctx context.Context, email, password stri
 	}
 
 	user := &models.User{
-		Email:        email,
+		Phone:        email,
 		PasswordHash: passwordHash,
 		FirstName:    "Super",
 		LastName:     "Admin",

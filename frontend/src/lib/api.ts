@@ -77,20 +77,20 @@ class ApiClient {
     }
 
     // Auth
-    async login(email: string, password: string) {
+    async login(phone: string, password: string) {
         const response = await this.request<{
             access_token: string;
             refresh_token: string;
             expires_in: number;
             user: {
                 id: string;
-                email: string;
+                phone: string;
                 first_name: string;
                 last_name: string;
                 role: string;
                 clinic_id?: string;
             };
-        }>('POST', '/api/v1/auth/login', { email, password }, false);
+        }>('POST', '/api/v1/auth/login', { phone, password }, false);
 
         localStorage.setItem('access_token', response.access_token);
         localStorage.setItem('refresh_token', response.refresh_token);
@@ -132,6 +132,10 @@ class ApiClient {
 
     async createPatient(data: any) {
         return this.request('POST', '/api/v1/patients', data);
+    }
+
+    async importPatients(patients: { first_name: string; last_name: string; phone: string; gender?: string }[]) {
+        return this.request<{ imported: number; errors: string[] }>('POST', '/api/v1/patients/import', { patients });
     }
 
     // Appointments
@@ -197,8 +201,8 @@ class ApiClient {
         return this.request<{ users: any[] }>('GET', '/api/v1/boss/users');
     }
 
-    async createUser(data: any) {
-        return this.request('POST', '/api/v1/boss/users', data);
+    async createUser(data: { phone: string; first_name: string; last_name: string; role: string; password: string }) {
+        return this.request('POST', '/api/v1/boss/users', { ...data, phone: '+998' + data.phone });
     }
 
     async getBossServices() {
@@ -207,6 +211,18 @@ class ApiClient {
 
     async createService(data: any) {
         return this.request('POST', '/api/v1/boss/services', data);
+    }
+
+    async updateService(id: string, data: { name?: string; description?: string; price?: number; duration?: number; is_active?: boolean }) {
+        return this.request('PUT', `/api/v1/boss/services/${id}`, data);
+    }
+
+    async deleteService(id: string) {
+        return this.request('DELETE', `/api/v1/boss/services/${id}`);
+    }
+
+    async importServices(services: { name: string; description?: string; price: number; duration: number }[]) {
+        return this.request<{ imported: number; errors: string[] }>('POST', '/api/v1/boss/services/import', { services });
     }
 
     async getDailyReport(date: string) {
@@ -290,6 +306,10 @@ class ApiClient {
 
     async updateClinic(clinicId: string, data: { name?: string; timezone?: string; address?: string; phone?: string; is_active?: boolean }) {
         return this.request('PATCH', `/api/v1/admin/clinics/${clinicId}`, data);
+    }
+
+    async deleteClinic(clinicId: string) {
+        return this.request('DELETE', `/api/v1/admin/clinics/${clinicId}`);
     }
 
     // Treatment Plans

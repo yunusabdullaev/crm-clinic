@@ -8,7 +8,7 @@ import { useSettings } from '@/lib/settings';
 export default function LoginPage() {
     const router = useRouter();
     const { t } = useSettings();
-    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -19,7 +19,8 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const response = await api.login(email, password);
+            const fullPhone = '+998' + phone;
+            const response = await api.login(fullPhone, password);
 
             // Redirect based on role
             switch (response.user.role) {
@@ -55,15 +56,20 @@ export default function LoginPage() {
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>{t('login.email')}</label>
-                        <input
-                            type="email"
-                            className="input"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder={t('login.emailPlaceholder')}
-                            required
-                        />
+                        <label>Telefon raqami</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                            <input
+                                type="tel"
+                                className="input"
+                                style={{ flex: 1 }}
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 9))}
+                                placeholder="90 123 45 67"
+                                required
+                                maxLength={9}
+                            />
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>{t('login.password')}</label>

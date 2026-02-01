@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Plus, Search, Settings } from 'lucide-react';
+import { Plus, Search, Settings, Upload } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const INITIAL_PATIENT_FORM = { first_name: '', last_name: '', phone: '', gender: '' };
 const INITIAL_APPOINTMENT_FORM = { patient_id: '', doctor_id: '', date: '', hour: '', minute: '' };
 
-// Working hours (08:00 - 20:00)
-const HOURS = Array.from({ length: 13 }, (_, i) => (8 + i).toString().padStart(2, '0'));
+// Working hours (09:00 - 00:00)
+const HOURS = [...Array.from({ length: 15 }, (_, i) => (9 + i).toString().padStart(2, '0')), '00'];
 const MINUTES = ['00', '30'];
 
 export default function ReceptionistDashboard() {
@@ -54,6 +55,12 @@ export default function ReceptionistDashboard() {
     const [showPatientDropdown, setShowPatientDropdown] = useState(false);
     const [showInlinePatientForm, setShowInlinePatientForm] = useState(false);
     const [inlinePatientForm, setInlinePatientForm] = useState(INITIAL_PATIENT_FORM);
+
+    // Excel import state
+    const [importPreview, setImportPreview] = useState<any[]>([]);
+    const [importing, setImporting] = useState(false);
+    const [importResult, setImportResult] = useState<{ imported: number; errors: string[] } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const u = api.getUser();
@@ -116,6 +123,51 @@ export default function ReceptionistDashboard() {
     const handleLogout = () => {
         api.logout();
         router.push('/login');
+    };
+
+    // Excel import handler
+    const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const data = new Uint8Array(event.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+            // Skip header row, map columns: Ism, Familiya, Telefon, Jins
+            const patients = jsonData.slice(1).filter(row => row[0] && row[1] && row[2]).map(row => ({
+                first_name: String(row[0] || '').trim(),
+                last_name: String(row[1] || '').trim(),
+                phone: '+998' + String(row[2] || '').replace(/[^0-9]/g, '').slice(-9),
+                gender: String(row[3] || '').toLowerCase() === 'erkak' ? 'male' :
+                    String(row[3] || '').toLowerCase() === 'ayol' ? 'female' :
+                        String(row[3] || '').toLowerCase() || undefined
+            }));
+
+            setImportPreview(patients);
+            setImportResult(null);
+            setShowModal('importPatients');
+        };
+        reader.readAsArrayBuffer(file);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleConfirmImport = async () => {
+        if (importPreview.length === 0) return;
+        setImporting(true);
+        try {
+            const result = await api.importPatients(importPreview);
+            setImportResult(result);
+            if (result.imported > 0) loadData();
+        } catch (err: any) {
+            setImportResult({ imported: 0, errors: [err.message] });
+        } finally {
+            setImporting(false);
+        }
     };
 
     const handleCreatePatient = async (e: React.FormEvent) => {
@@ -322,7 +374,19 @@ export default function ReceptionistDashboard() {
                                 onChange={(e) => setSearch(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && loadData()}
                             />
-                            <button className="btn btn-primary" onClick={() => openModal('patient')}>{t('patients.add')}</button>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".xlsx,.xls"
+                                    onChange={handleExcelImport}
+                                    style={{ display: 'none' }}
+                                />
+                                <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
+                                    <Upload size={16} style={{ marginRight: 4 }} /> Excel import
+                                </button>
+                                <button className="btn btn-primary" onClick={() => openModal('patient')}>{t('patients.add')}</button>
+                            </div>
                         </div>
                         <table className="table">
                             <thead>
@@ -456,7 +520,10 @@ export default function ReceptionistDashboard() {
                                 </div>
                                 <div className="form-group">
                                     <label>{t('common.phone')} *</label>
-                                    <input className="input" value={patientForm.phone} onChange={(e) => setPatientForm({ ...patientForm, phone: e.target.value })} required />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                        <input className="input" style={{ flex: 1 }} placeholder="90 123 45 67" value={patientForm.phone} onChange={(e) => setPatientForm({ ...patientForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} required maxLength={9} />
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label>{t('patients.gender')}</label>
@@ -562,12 +629,18 @@ export default function ReceptionistDashboard() {
                                             </div>
                                             <div className="form-group" style={{ marginBottom: 0 }}>
                                                 <label style={{ fontSize: 12 }}>{t('common.phone')} *</label>
-                                                <input
-                                                    className="input"
-                                                    value={inlinePatientForm.phone}
-                                                    onChange={(e) => setInlinePatientForm({ ...inlinePatientForm, phone: e.target.value })}
-                                                    required
-                                                />
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <span style={{ padding: '6px 8px', background: '#f1f5f9', borderRadius: 4, fontWeight: 500, fontSize: 12, color: '#475569' }}>+998</span>
+                                                    <input
+                                                        className="input"
+                                                        style={{ flex: 1 }}
+                                                        placeholder="90 123 45 67"
+                                                        value={inlinePatientForm.phone}
+                                                        onChange={(e) => setInlinePatientForm({ ...inlinePatientForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })}
+                                                        required
+                                                        maxLength={9}
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="form-group" style={{ marginBottom: 0 }}>
                                                 <label style={{ fontSize: 12 }}>{t('patients.gender')}</label>
@@ -645,6 +718,73 @@ export default function ReceptionistDashboard() {
                                     <button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Import Patients Modal */}
+                {showModal === 'importPatients' && (
+                    <div className="modal-overlay" onClick={closeModal}>
+                        <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
+                            <h2>📥 Bemorlarni import qilish</h2>
+
+                            {importResult ? (
+                                <div>
+                                    <div style={{ padding: 16, background: importResult.imported > 0 ? '#dcfce7' : '#fef2f2', borderRadius: 8, marginBottom: 16 }}>
+                                        <p style={{ fontWeight: 600, marginBottom: 8 }}>
+                                            ✅ {importResult.imported} ta bemor muvaffaqiyatli import qilindi
+                                        </p>
+                                        {importResult.errors.length > 0 && (
+                                            <div style={{ color: '#dc2626' }}>
+                                                <p style={{ fontWeight: 500 }}>Xatolar:</p>
+                                                <ul style={{ marginLeft: 16, fontSize: 14 }}>
+                                                    {importResult.errors.slice(0, 5).map((err, i) => (
+                                                        <li key={i}>{err}</li>
+                                                    ))}
+                                                    {importResult.errors.length > 5 && <li>... va yana {importResult.errors.length - 5} ta</li>}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button className="btn btn-primary" onClick={closeModal}>Yopish</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <p style={{ marginBottom: 12, color: '#64748b' }}>Excel format: <b>Ism, Familiya, Telefon, Jins</b></p>
+
+                                    <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
+                                        <table className="table" style={{ fontSize: 14 }}>
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Ism</th>
+                                                    <th>Familiya</th>
+                                                    <th>Telefon</th>
+                                                    <th>Jins</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {importPreview.map((p, i) => (
+                                                    <tr key={i}>
+                                                        <td>{i + 1}</td>
+                                                        <td>{p.first_name}</td>
+                                                        <td>{p.last_name}</td>
+                                                        <td>{p.phone}</td>
+                                                        <td>{p.gender || '-'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                        <button className="btn btn-secondary" onClick={closeModal}>Bekor qilish</button>
+                                        <button className="btn btn-primary" onClick={handleConfirmImport} disabled={importing || importPreview.length === 0}>
+                                            {importing ? 'Import qilinmoqda...' : `${importPreview.length} ta bemorni import qilish`}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

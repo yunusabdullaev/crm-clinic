@@ -222,3 +222,29 @@ func (h *SuperadminHandler) UpdateClinic(c *gin.Context) {
 
 	c.JSON(http.StatusOK, clinic.ToResponse())
 }
+
+// DeleteClinic deletes a clinic
+// DELETE /api/v1/admin/clinics/:id
+func (h *SuperadminHandler) DeleteClinic(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		appErr := apperrors.BadRequest("Invalid clinic ID")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	err = h.clinicService.Delete(c.Request.Context(), id)
+	if err != nil {
+		if appErr, ok := err.(*apperrors.AppError); ok {
+			c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+			return
+		}
+		appErr := apperrors.Internal("Failed to delete clinic")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Clinic deleted successfully"})
+}

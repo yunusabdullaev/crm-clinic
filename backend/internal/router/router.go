@@ -111,6 +111,7 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			admin.GET("/clinics/:id", superadminHandler.GetClinic)
 			admin.POST("/clinics/:id/invite", superadminHandler.InviteBoss)
 			admin.PATCH("/clinics/:id", superadminHandler.UpdateClinic)
+			admin.DELETE("/clinics/:id", superadminHandler.DeleteClinic)
 		}
 
 		// Boss routes
@@ -130,6 +131,7 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			boss.GET("/services", bossHandler.ListServices)
 			boss.PUT("/services/:id", bossHandler.UpdateService)
 			boss.DELETE("/services/:id", bossHandler.DeleteService)
+			boss.POST("/services/import", bossHandler.ImportServices)
 
 			// Doctor contracts
 			boss.POST("/contracts", bossHandler.CreateContract)
@@ -164,6 +166,7 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 		patients.Use(middleware.TenantIsolation())
 		{
 			patients.POST("", receptionistHandler.CreatePatient)
+			patients.POST("/import", receptionistHandler.ImportPatients)
 			patients.GET("", receptionistHandler.ListPatients)
 			patients.GET("/:id", receptionistHandler.GetPatient)
 			patients.PUT("/:id", receptionistHandler.UpdatePatient)

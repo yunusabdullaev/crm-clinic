@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	"medical-crm/internal/models"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"medical-crm/internal/models"
 )
 
 type UserRepository struct {
@@ -58,6 +59,18 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 
 	var user models.User
 	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) GetByPhone(ctx context.Context, phone string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	var user models.User
+	err := r.collection.FindOne(ctx, bson.M{"phone": phone}).Decode(&user)
 	if err != nil {
 		return nil, err
 	}

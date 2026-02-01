@@ -75,6 +75,57 @@ func (h *ReceptionistHandler) CreatePatient(c *gin.Context) {
 	c.JSON(http.StatusCreated, patient.ToResponse())
 }
 
+// ImportPatients bulk imports patients from Excel data
+// POST /api/v1/patients/import
+func (h *ReceptionistHandler) ImportPatients(c *gin.Context) {
+	requestID := middleware.GetRequestID(c)
+
+	clinicID, err := middleware.GetClinicObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Clinic not found in token")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	userID, err := middleware.GetUserObjectID(c)
+	if err != nil {
+		appErr := apperrors.Unauthorized("Invalid user")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	var req struct {
+		Patients []models.CreatePatientDTO `json:"patients" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		appErr := apperrors.Validation("Invalid request body: " + err.Error())
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	if len(req.Patients) == 0 {
+		appErr := apperrors.Validation("No patients provided")
+		c.JSON(appErr.HTTPStatus, apperrors.NewErrorResponse(appErr, requestID))
+		return
+	}
+
+	imported := 0
+	var errors []string
+	for i, dto := range req.Patients {
+		_, err := h.patientService.Create(c.Request.Context(), dto, clinicID, userID)
+		if err != nil {
+			errors = append(errors, "Row "+strconv.Itoa(i+1)+": "+err.Error())
+		} else {
+			imported++
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"imported": imported,
+		"errors":   errors,
+	})
+}
+
 // ListPatients returns paginated patients
 // GET /api/v1/patients
 func (h *ReceptionistHandler) ListPatients(c *gin.Context) {

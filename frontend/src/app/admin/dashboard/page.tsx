@@ -58,7 +58,8 @@ export default function AdminDashboard() {
     const handleInviteBoss = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const result = await api.inviteBoss(selectedClinic.id, inviteEmail);
+            const fullPhone = '+998' + inviteEmail;
+            const result = await api.inviteBoss(selectedClinic.id, fullPhone);
             setInviteResult(result);
         } catch (err: any) {
             alert(err.message);
@@ -89,6 +90,16 @@ export default function AdminDashboard() {
         try {
             await api.updateClinic(selectedClinic.id, editClinicForm);
             setShowModal(null);
+            loadClinics();
+        } catch (err: any) {
+            alert(err.message);
+        }
+    };
+
+    const handleDeleteClinic = async (clinic: any) => {
+        if (!confirm(`Klinikani o'chirmoqchimisiz: ${clinic.name}?`)) return;
+        try {
+            await api.deleteClinic(clinic.id);
             loadClinics();
         } catch (err: any) {
             alert(err.message);
@@ -136,10 +147,13 @@ export default function AdminDashboard() {
                                     <td>{c.is_active ? '✅ Active' : '❌ Inactive'}</td>
                                     <td>
                                         <button className="btn btn-secondary" style={{ fontSize: 12, marginRight: 4 }} onClick={() => openEditModal(c)}>
-                                            Edit
+                                            ✏️ Edit
                                         </button>
-                                        <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => openInviteModal(c)}>
-                                            Invite Boss
+                                        <button className="btn btn-primary" style={{ fontSize: 12, marginRight: 4 }} onClick={() => openInviteModal(c)}>
+                                            📧 Invite Boss
+                                        </button>
+                                        <button className="btn btn-danger" style={{ fontSize: 12, background: '#ef4444', border: 'none' }} onClick={() => handleDeleteClinic(c)}>
+                                            🗑️ Delete
                                         </button>
                                     </td>
                                 </tr>
@@ -176,7 +190,10 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="form-group">
                                     <label>Phone</label>
-                                    <input className="input" value={clinicForm.phone} onChange={(e) => setClinicForm({ ...clinicForm, phone: e.target.value })} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                        <input className="input" style={{ flex: 1 }} placeholder="90 123 45 67" value={clinicForm.phone} onChange={(e) => setClinicForm({ ...clinicForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} maxLength={9} />
+                                    </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <button type="submit" className="btn btn-primary">Create</button>
@@ -195,7 +212,7 @@ export default function AdminDashboard() {
                                 <div>
                                     <p style={{ marginBottom: 16 }}>✅ Invitation created successfully!</p>
                                     <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
-                                        <p><strong>Email:</strong> {inviteResult.email}</p>
+                                        <p><strong>Telefon:</strong> {inviteResult.email}</p>
                                         <p><strong>Token:</strong> {inviteResult.token}</p>
                                         <p><strong>Link:</strong></p>
                                         <input
@@ -211,15 +228,20 @@ export default function AdminDashboard() {
                             ) : (
                                 <form onSubmit={handleInviteBoss}>
                                     <div className="form-group">
-                                        <label>Boss Email *</label>
-                                        <input
-                                            className="input"
-                                            type="email"
-                                            value={inviteEmail}
-                                            onChange={(e) => setInviteEmail(e.target.value)}
-                                            required
-                                            placeholder="boss@clinic.com"
-                                        />
+                                        <label>Boss Telefon Raqami *</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                            <input
+                                                className="input"
+                                                type="tel"
+                                                style={{ flex: 1 }}
+                                                value={inviteEmail}
+                                                onChange={(e) => setInviteEmail(e.target.value.replace(/[^0-9]/g, '').slice(0, 9))}
+                                                required
+                                                maxLength={9}
+                                                placeholder="90 123 45 67"
+                                            />
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         <button type="submit" className="btn btn-primary">Send Invite</button>
@@ -257,7 +279,10 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="form-group">
                                     <label>Phone</label>
-                                    <input className="input" value={editClinicForm.phone} onChange={(e) => setEditClinicForm({ ...editClinicForm, phone: e.target.value })} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                        <input className="input" style={{ flex: 1 }} placeholder="90 123 45 67" value={editClinicForm.phone} onChange={(e) => setEditClinicForm({ ...editClinicForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} maxLength={9} />
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

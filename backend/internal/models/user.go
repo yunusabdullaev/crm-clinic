@@ -8,16 +8,16 @@ import (
 
 // Role constants
 const (
-	RoleSuperadmin  = "superadmin"
-	RoleBoss        = "boss"
-	RoleDoctor      = "doctor"
+	RoleSuperadmin   = "superadmin"
+	RoleBoss         = "boss"
+	RoleDoctor       = "doctor"
 	RoleReceptionist = "receptionist"
 )
 
 // User represents a system user
 type User struct {
 	ID           primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
-	Email        string              `bson:"email" json:"email"`
+	Phone        string              `bson:"phone" json:"phone"`
 	PasswordHash string              `bson:"password_hash" json:"-"` // Never expose
 	FirstName    string              `bson:"first_name" json:"first_name"`
 	LastName     string              `bson:"last_name" json:"last_name"`
@@ -30,7 +30,7 @@ type User struct {
 
 // CreateUserDTO is the input for creating a user (by Boss)
 type CreateUserDTO struct {
-	Email     string `json:"email" binding:"required,email"`
+	Phone     string `json:"phone" binding:"required,min=9,max=12"`
 	FirstName string `json:"first_name" binding:"required,min=1,max=50"`
 	LastName  string `json:"last_name" binding:"required,min=1,max=50"`
 	Role      string `json:"role" binding:"required,oneof=doctor receptionist"`
@@ -39,7 +39,7 @@ type CreateUserDTO struct {
 
 // LoginDTO is the input for login
 type LoginDTO struct {
-	Email    string `json:"email" binding:"required,email"`
+	Phone    string `json:"phone" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -59,7 +59,7 @@ type RefreshTokenDTO struct {
 // UserResponse is the API response for a user
 type UserResponse struct {
 	ID        string    `json:"id"`
-	Email     string    `json:"email"`
+	Phone     string    `json:"phone"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
 	Role      string    `json:"role"`
@@ -72,7 +72,7 @@ type UserResponse struct {
 func (u *User) ToResponse() UserResponse {
 	resp := UserResponse{
 		ID:        u.ID.Hex(),
-		Email:     u.Email,
+		Phone:     u.Phone,
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Role:      u.Role,

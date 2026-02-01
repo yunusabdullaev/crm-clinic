@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	"medical-crm/internal/models"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"medical-crm/internal/models"
 )
 
 type ClinicRepository struct {
@@ -105,5 +106,13 @@ func (r *ClinicRepository) Update(ctx context.Context, clinic *models.Clinic) er
 		bson.M{"_id": clinic.ID},
 		bson.M{"$set": clinic},
 	)
+	return err
+}
+
+func (r *ClinicRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	return err
 }

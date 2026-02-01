@@ -140,6 +140,20 @@ func (s *ClinicService) Update(ctx context.Context, id primitive.ObjectID, dto m
 	return clinic, nil
 }
 
+// Delete deletes a clinic (superadmin only)
+func (s *ClinicService) Delete(ctx context.Context, id primitive.ObjectID) error {
+	_, err := s.clinicRepo.GetByID(ctx, id)
+	if err != nil {
+		return apperrors.NotFound("Clinic")
+	}
+
+	if err := s.clinicRepo.Delete(ctx, id); err != nil {
+		return apperrors.InternalWithErr("Failed to delete clinic", err)
+	}
+
+	return nil
+}
+
 // generateSecureToken generates a cryptographically secure random token
 func generateSecureToken(length int) (string, error) {
 	bytes := make([]byte, length)

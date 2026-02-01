@@ -36,6 +36,7 @@ export default function DoctorDashboard() {
         payment_type: 'cash' as 'cash' | 'card',
         affected_teeth: [] as string[],
         planSteps: [] as { description: string; completed: boolean }[],
+        comment: '',
     });
 
     // Tooth numbers for the dental formula
@@ -114,6 +115,7 @@ export default function DoctorDashboard() {
             payment_type: 'cash',
             affected_teeth: [],
             planSteps: [],
+            comment: '',
         });
         setShowModal('complete');
     };
@@ -552,6 +554,16 @@ export default function DoctorDashboard() {
                                         <option value="cash">{t('payment.cash')}</option>
                                         <option value="card">{t('payment.card')}</option>
                                     </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>📝 Izoh / Komentariy</label>
+                                    <textarea
+                                        className="input"
+                                        rows={2}
+                                        value={visitForm.comment}
+                                        onChange={(e) => setVisitForm({ ...visitForm, comment: e.target.value })}
+                                        placeholder="Qo'shimcha izohlar..."
+                                    />
                                 </div>
                                 <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
                                     <strong>{t('visits.total')}: {calculateTotal().toLocaleString()} UZS</strong>

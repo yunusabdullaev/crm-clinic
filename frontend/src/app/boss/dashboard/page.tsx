@@ -7,14 +7,17 @@ import { useSettings } from '@/lib/settings';
 import {
     BarChart3, Users, Briefcase, FileText, Receipt, Wallet,
     Activity, Settings, LogOut, Plus, Trash2, UserPlus, Building2,
-    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList
+    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { useRef } from 'react';
 
-const INITIAL_USER_FORM = { email: '', first_name: '', last_name: '', role: 'doctor', password: '' };
+const INITIAL_USER_FORM = { phone: '', first_name: '', last_name: '', role: 'doctor', password: '' };
 const INITIAL_SERVICE_FORM = { name: '', description: '', price: '', duration: '30' };
 const INITIAL_CONTRACT_FORM = { doctor_id: '', share_percentage: '50', start_date: '', end_date: '', notes: '' };
 const INITIAL_EXPENSE_FORM = { category: 'other', amount: '', date: '', note: '' };
 const INITIAL_SALARY_FORM = { user_id: '', monthly_amount: '', effective_from: '' };
+const INITIAL_EDIT_SERVICE_FORM = { name: '', description: '', price: '', duration: '', is_active: true };
 
 export default function BossDashboard() {
     const router = useRouter();
@@ -41,9 +44,17 @@ export default function BossDashboard() {
     // Form states
     const [userForm, setUserForm] = useState(INITIAL_USER_FORM);
     const [serviceForm, setServiceForm] = useState(INITIAL_SERVICE_FORM);
+    const [editServiceForm, setEditServiceForm] = useState(INITIAL_EDIT_SERVICE_FORM);
+    const [editingService, setEditingService] = useState<any>(null);
     const [contractForm, setContractForm] = useState(INITIAL_CONTRACT_FORM);
     const [expenseForm, setExpenseForm] = useState(INITIAL_EXPENSE_FORM);
     const [salaryForm, setSalaryForm] = useState(INITIAL_SALARY_FORM);
+
+    // Service import state
+    const [serviceImportPreview, setServiceImportPreview] = useState<any[]>([]);
+    const [serviceImporting, setServiceImporting] = useState(false);
+    const [serviceImportResult, setServiceImportResult] = useState<{ imported: number; errors: string[] } | null>(null);
+    const serviceFileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const u = api.getUser();
@@ -127,6 +138,37 @@ export default function BossDashboard() {
         e.preventDefault();
         try { await api.createService({ name: serviceForm.name, description: serviceForm.description, price: parseFloat(serviceForm.price), duration: parseInt(serviceForm.duration) }); closeModal(); loadData(); } catch (err: any) { alert(err.message); }
     };
+    const handleEditService = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingService) return;
+        try {
+            await api.updateService(editingService.id, {
+                name: editServiceForm.name,
+                description: editServiceForm.description,
+                price: parseFloat(editServiceForm.price),
+                duration: parseInt(editServiceForm.duration),
+                is_active: editServiceForm.is_active
+            });
+            closeModal();
+            loadData();
+        } catch (err: any) { alert(err.message); }
+    };
+    const handleDeleteService = async (id: string) => {
+        if (!confirm(t('common.confirm'))) return;
+        try { await api.deleteService(id); loadData(); } catch (err: any) { alert(err.message); }
+    };
+    const openEditServiceModal = (service: any) => {
+        setEditingService(service);
+        setEditServiceForm({
+            name: service.name,
+            description: service.description || '',
+            price: service.price.toString(),
+            duration: service.duration.toString(),
+            is_active: service.is_active
+        });
+        setModalKey(prev => prev + 1);
+        setShowModal('editService');
+    };
     const handleCreateContract = async (e: React.FormEvent) => {
         e.preventDefault();
         try { await api.createContract({ doctor_id: contractForm.doctor_id, share_percentage: parseFloat(contractForm.share_percentage), start_date: contractForm.start_date, end_date: contractForm.end_date || undefined, notes: contractForm.notes || undefined }); closeModal(); loadData(); } catch (err: any) { alert(err.message); }
@@ -142,6 +184,49 @@ export default function BossDashboard() {
         try { await api.createSalary({ user_id: salaryForm.user_id, monthly_amount: parseFloat(salaryForm.monthly_amount), effective_from: salaryForm.effective_from }); closeModal(); loadData(); } catch (err: any) { alert(err.message); }
     };
     const handleDeleteSalary = async (id: string) => { if (!confirm(t('common.confirm'))) return; try { await api.deleteSalary(id); loadData(); } catch (err: any) { alert(err.message); } };
+
+    // Service Excel import handler
+    const handleServiceExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const data = new Uint8Array(event.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+            // Skip header row, map columns: Nom, Tavsif, Narx, Davomiylik
+            const services = jsonData.slice(1).filter(row => row[0] && row[2]).map(row => ({
+                name: String(row[0] || '').trim(),
+                description: String(row[1] || '').trim(),
+                price: parseFloat(String(row[2] || '0').replace(/[^0-9.]/g, '')) || 0,
+                duration: parseInt(String(row[3] || '30').replace(/[^0-9]/g, '')) || 30
+            }));
+
+            setServiceImportPreview(services);
+            setServiceImportResult(null);
+            setShowModal('importServices');
+        };
+        reader.readAsArrayBuffer(file);
+        if (serviceFileRef.current) serviceFileRef.current.value = '';
+    };
+
+    const handleConfirmServiceImport = async () => {
+        if (serviceImportPreview.length === 0) return;
+        setServiceImporting(true);
+        try {
+            const result = await api.importServices(serviceImportPreview);
+            setServiceImportResult(result);
+            if (result.imported > 0) loadData();
+        } catch (err: any) {
+            setServiceImportResult({ imported: 0, errors: [err.message] });
+        } finally {
+            setServiceImporting(false);
+        }
+    };
 
     const getDoctorName = (doctorId: string) => { const doctor = doctors.find(d => d.id === doctorId); return doctor ? `${doctor.first_name} ${doctor.last_name}` : 'Unknown'; };
     const getStaffName = (userId: string) => { const staff = users.find(u => u.id === userId); return staff ? `${staff.first_name} ${staff.last_name}` : 'Unknown'; };
@@ -240,10 +325,34 @@ export default function BossDashboard() {
 
                 {activeTab === 'services' && (
                     <div className="card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h3><Briefcase size={18} style={{ marginRight: '6px' }} />{t('services.title')}</h3><button className="btn btn-primary" onClick={() => openModal('service')}><Plus size={16} style={{ marginRight: '4px' }} />{t('services.add')}</button></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                            <h3><Briefcase size={18} style={{ marginRight: '6px' }} />{t('services.title')}</h3>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <input
+                                    ref={serviceFileRef}
+                                    type="file"
+                                    accept=".xlsx,.xls"
+                                    onChange={handleServiceExcelImport}
+                                    style={{ display: 'none' }}
+                                />
+                                <button className="btn btn-secondary" onClick={() => serviceFileRef.current?.click()}>
+                                    <Upload size={16} style={{ marginRight: 4 }} /> Excel import
+                                </button>
+                                <button className="btn btn-primary" onClick={() => openModal('service')}><Plus size={16} style={{ marginRight: '4px' }} />{t('services.add')}</button>
+                            </div>
+                        </div>
                         <table className="table">
-                            <thead><tr><th>{t('services.name')}</th><th>{t('common.price')}</th><th>{t('common.duration')}</th><th>{t('common.status')}</th></tr></thead>
-                            <tbody>{services.map((s) => (<tr key={s.id}><td>{s.name}</td><td>{s.price.toLocaleString()} UZS</td><td>{s.duration} min</td><td>{s.is_active ? `✅ ${t('common.active')}` : `❌ ${t('common.inactive')}`}</td></tr>))}</tbody>
+                            <thead><tr><th>{t('services.name')}</th><th>{t('common.price')}</th><th>{t('common.duration')}</th><th>{t('common.status')}</th><th>{t('common.actions')}</th></tr></thead>
+                            <tbody>{services.map((s) => (<tr key={s.id}>
+                                <td>{s.name}</td>
+                                <td>{s.price.toLocaleString()} UZS</td>
+                                <td>{s.duration} min</td>
+                                <td>{s.is_active ? `✅ ${t('common.active')}` : `❌ ${t('common.inactive')}`}</td>
+                                <td>
+                                    <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px', marginRight: 4 }} onClick={() => openEditServiceModal(s)}>✏️ {t('common.edit')}</button>
+                                    <button className="btn btn-danger" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteService(s.id)}>🗑️</button>
+                                </td>
+                            </tr>))}</tbody>
                         </table>
                     </div>
                 )}
@@ -322,7 +431,7 @@ export default function BossDashboard() {
                         <div className="modal" onClick={(e) => e.stopPropagation()} key={modalKey}>
                             <h2>{t('staff.add')}</h2>
                             <form onSubmit={handleCreateUser}>
-                                <div className="form-group"><label>{t('common.email')}</label><input className="input" type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} required /></div>
+                                <div className="form-group"><label>Telefon raqami</label><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span><input className="input" type="tel" style={{ flex: 1 }} value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} maxLength={9} required /></div></div>
                                 <div className="form-group"><label>{t('patients.firstName')}</label><input className="input" value={userForm.first_name} onChange={(e) => setUserForm({ ...userForm, first_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('patients.lastName')}</label><input className="input" value={userForm.last_name} onChange={(e) => setUserForm({ ...userForm, last_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('staff.role')}</label><select className="input" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="doctor">{t('staff.doctor')}</option><option value="receptionist">{t('staff.receptionist')}</option></select></div>
@@ -344,6 +453,28 @@ export default function BossDashboard() {
                                 <div className="form-group"><label>{t('common.price')}</label><input className="input" type="number" step="0.01" value={serviceForm.price} onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('common.duration')} (min)</label><input className="input" type="number" value={serviceForm.duration} onChange={(e) => setServiceForm({ ...serviceForm, duration: e.target.value })} required /></div>
                                 <div style={{ display: 'flex', gap: 8 }}><button type="submit" className="btn btn-primary">{t('common.create')}</button><button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button></div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Service Modal */}
+                {showModal === 'editService' && (
+                    <div className="modal-overlay" onClick={closeModal}>
+                        <div className="modal" onClick={(e) => e.stopPropagation()} key={modalKey}>
+                            <h2>✏️ Xizmatni tahrirlash</h2>
+                            <form onSubmit={handleEditService}>
+                                <div className="form-group"><label>{t('services.name')}</label><input className="input" value={editServiceForm.name} onChange={(e) => setEditServiceForm({ ...editServiceForm, name: e.target.value })} required /></div>
+                                <div className="form-group"><label>{t('services.description')}</label><input className="input" value={editServiceForm.description} onChange={(e) => setEditServiceForm({ ...editServiceForm, description: e.target.value })} /></div>
+                                <div className="form-group"><label>{t('common.price')}</label><input className="input" type="number" step="0.01" value={editServiceForm.price} onChange={(e) => setEditServiceForm({ ...editServiceForm, price: e.target.value })} required /></div>
+                                <div className="form-group"><label>{t('common.duration')} (min)</label><input className="input" type="number" value={editServiceForm.duration} onChange={(e) => setEditServiceForm({ ...editServiceForm, duration: e.target.value })} required /></div>
+                                <div className="form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <input type="checkbox" checked={editServiceForm.is_active} onChange={(e) => setEditServiceForm({ ...editServiceForm, is_active: e.target.checked })} />
+                                        {t('common.active')}
+                                    </label>
+                                </div>
+                                <div style={{ display: 'flex', gap: 8 }}><button type="submit" className="btn btn-primary">{t('common.save')}</button><button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button></div>
                             </form>
                         </div>
                     </div>
@@ -393,6 +524,73 @@ export default function BossDashboard() {
                                 <div className="form-group"><label>{t('salaries.effectiveFrom')}</label><input className="input" type="date" value={salaryForm.effective_from} onChange={(e) => setSalaryForm({ ...salaryForm, effective_from: e.target.value })} required /></div>
                                 <div style={{ display: 'flex', gap: 8 }}><button type="submit" className="btn btn-primary">{t('common.create')}</button><button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button></div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Import Services Modal */}
+                {showModal === 'importServices' && (
+                    <div className="modal-overlay" onClick={closeModal}>
+                        <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
+                            <h2>📥 Xizmatlarni import qilish</h2>
+
+                            {serviceImportResult ? (
+                                <div>
+                                    <div style={{ padding: 16, background: serviceImportResult.imported > 0 ? '#dcfce7' : '#fef2f2', borderRadius: 8, marginBottom: 16 }}>
+                                        <p style={{ fontWeight: 600, marginBottom: 8 }}>
+                                            ✅ {serviceImportResult.imported} ta xizmat muvaffaqiyatli import qilindi
+                                        </p>
+                                        {serviceImportResult.errors.length > 0 && (
+                                            <div style={{ color: '#dc2626' }}>
+                                                <p style={{ fontWeight: 500 }}>Xatolar:</p>
+                                                <ul style={{ marginLeft: 16, fontSize: 14 }}>
+                                                    {serviceImportResult.errors.slice(0, 5).map((err, i) => (
+                                                        <li key={i}>{err}</li>
+                                                    ))}
+                                                    {serviceImportResult.errors.length > 5 && <li>... va yana {serviceImportResult.errors.length - 5} ta</li>}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button className="btn btn-primary" onClick={closeModal}>Yopish</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <p style={{ marginBottom: 12, color: '#64748b' }}>Excel format: <b>Nom, Tavsif, Narx, Davomiylik (min)</b></p>
+
+                                    <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
+                                        <table className="table" style={{ fontSize: 14 }}>
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Nom</th>
+                                                    <th>Tavsif</th>
+                                                    <th>Narx</th>
+                                                    <th>Min</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {serviceImportPreview.map((s, i) => (
+                                                    <tr key={i}>
+                                                        <td>{i + 1}</td>
+                                                        <td>{s.name}</td>
+                                                        <td>{s.description || '-'}</td>
+                                                        <td>{s.price.toLocaleString()} UZS</td>
+                                                        <td>{s.duration}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                        <button className="btn btn-secondary" onClick={closeModal}>Bekor qilish</button>
+                                        <button className="btn btn-primary" onClick={handleConfirmServiceImport} disabled={serviceImporting || serviceImportPreview.length === 0}>
+                                            {serviceImporting ? 'Import qilinmoqda...' : `${serviceImportPreview.length} ta xizmatni import qilish`}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

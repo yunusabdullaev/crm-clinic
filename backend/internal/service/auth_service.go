@@ -4,21 +4,22 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/crypto/bcrypt"
 	"medical-crm/internal/middleware"
 	"medical-crm/internal/models"
 	"medical-crm/internal/repository"
 	apperrors "medical-crm/pkg/errors"
+
+	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	userRepo       *repository.UserRepository
-	accessSecret   string
-	refreshSecret  string
-	accessTTL      time.Duration
-	refreshTTL     time.Duration
+	userRepo      *repository.UserRepository
+	accessSecret  string
+	refreshSecret string
+	accessTTL     time.Duration
+	refreshTTL    time.Duration
 }
 
 func NewAuthService(
@@ -37,7 +38,7 @@ func NewAuthService(
 
 // Login authenticates a user and returns tokens
 func (s *AuthService) Login(ctx context.Context, dto models.LoginDTO) (*models.AuthResponse, error) {
-	user, err := s.userRepo.GetByEmail(ctx, dto.Email)
+	user, err := s.userRepo.GetByPhone(ctx, dto.Phone)
 	if err != nil {
 		return nil, apperrors.InvalidCredentials()
 	}
@@ -97,7 +98,7 @@ func (s *AuthService) generateTokens(user *models.User) (*models.AuthResponse, e
 	// Access token claims
 	accessClaims := middleware.JWTClaims{
 		UserID: user.ID.Hex(),
-		Email:  user.Email,
+		Email:  user.Phone,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.accessTTL)),
@@ -118,7 +119,7 @@ func (s *AuthService) generateTokens(user *models.User) (*models.AuthResponse, e
 	// Refresh token claims
 	refreshClaims := middleware.JWTClaims{
 		UserID: user.ID.Hex(),
-		Email:  user.Email,
+		Email:  user.Phone,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.refreshTTL)),
