@@ -7,7 +7,7 @@ import { useSettings } from '@/lib/settings';
 import {
     BarChart3, Users, Briefcase, FileText, Receipt, Wallet,
     Activity, Settings, LogOut, Plus, Trash2, UserPlus, Building2,
-    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload
+    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload, Eye, EyeOff
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useRef } from 'react';
@@ -55,6 +55,9 @@ export default function BossDashboard() {
     const [serviceImporting, setServiceImporting] = useState(false);
     const [serviceImportResult, setServiceImportResult] = useState<{ imported: number; errors: string[] } | null>(null);
     const serviceFileRef = useRef<HTMLInputElement>(null);
+
+    // Password visibility
+    const [showUserPassword, setShowUserPassword] = useState(false);
 
     useEffect(() => {
         const u = api.getUser();
@@ -435,7 +438,7 @@ export default function BossDashboard() {
                                 <div className="form-group"><label>{t('patients.firstName')}</label><input className="input" value={userForm.first_name} onChange={(e) => setUserForm({ ...userForm, first_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('patients.lastName')}</label><input className="input" value={userForm.last_name} onChange={(e) => setUserForm({ ...userForm, last_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('staff.role')}</label><select className="input" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="doctor">{t('staff.doctor')}</option><option value="receptionist">{t('staff.receptionist')}</option></select></div>
-                                <div className="form-group"><label>{t('login.password')}</label><input className="input" type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={8} /></div>
+                                <div className="form-group"><label>{t('login.password')}</label><div style={{ position: 'relative' }}><input className="input" type={showUserPassword ? 'text' : 'password'} style={{ paddingRight: 40 }} value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={8} /><button type="button" onClick={() => setShowUserPassword(!showUserPassword)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#64748b' }}>{showUserPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button></div></div>
                                 <div style={{ display: 'flex', gap: 8 }}><button type="submit" className="btn btn-primary">{t('common.create')}</button><button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button></div>
                             </form>
                         </div>

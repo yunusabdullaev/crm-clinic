@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
     const { t } = useSettings();
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -73,14 +75,34 @@ export default function LoginPage() {
                     </div>
                     <div className="form-group">
                         <label>{t('login.password')}</label>
-                        <input
-                            type="password"
-                            className="input"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={t('login.passwordPlaceholder')}
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                className="input"
+                                style={{ paddingRight: 40 }}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder={t('login.passwordPlaceholder')}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: 10,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: 4,
+                                    color: '#64748b'
+                                }}
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                     </div>
                     <button
                         type="submit"

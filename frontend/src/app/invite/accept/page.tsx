@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function AcceptInvitePage() {
     const searchParams = useSearchParams();
@@ -14,6 +15,8 @@ export default function AcceptInvitePage() {
     const [lastName, setLastName] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -55,6 +58,18 @@ export default function AcceptInvitePage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const eyeButtonStyle = {
+        position: 'absolute' as const,
+        right: 10,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: 4,
+        color: '#64748b'
     };
 
     if (!token) {
@@ -119,26 +134,38 @@ export default function AcceptInvitePage() {
                     </div>
                     <div className="form-group">
                         <label>Parol *</label>
-                        <input
-                            type="password"
-                            className="input"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Parol yarating (kamida 8 ta belgi)"
-                            required
-                            minLength={8}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                className="input"
+                                style={{ paddingRight: 40 }}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Parol yarating (kamida 8 ta belgi)"
+                                required
+                                minLength={8}
+                            />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={eyeButtonStyle}>
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Parolni tasdiqlang *</label>
-                        <input
-                            type="password"
-                            className="input"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Parolni qayta kiriting"
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                className="input"
+                                style={{ paddingRight: 40 }}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="Parolni qayta kiriting"
+                                required
+                            />
+                            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={eyeButtonStyle}>
+                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                     </div>
                     <button
                         type="submit"
