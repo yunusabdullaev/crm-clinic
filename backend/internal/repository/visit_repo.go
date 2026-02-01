@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	"medical-crm/internal/models"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"medical-crm/internal/models"
 )
 
 type VisitRepository struct {
@@ -225,4 +226,23 @@ func (r *VisitRepository) CountByDoctorAndDate(ctx context.Context, clinicID, do
 		"date":      date,
 		"status":    models.VisitStatusCompleted,
 	})
+}
+
+// GetIncompleteByPatient checks if patient has any incomplete (started but not completed) visits
+func (r *VisitRepository) GetIncompleteByPatient(ctx context.Context, clinicID, patientID primitive.ObjectID) (*models.Visit, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	filter := bson.M{
+		"clinic_id":  clinicID,
+		"patient_id": patientID,
+		"status":     models.VisitStatusStarted,
+	}
+
+	var visit models.Visit
+	err := r.collection.FindOne(ctx, filter).Decode(&visit)
+	if err != nil {
+		return nil, err
+	}
+	return &visit, nil
 }

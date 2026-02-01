@@ -52,6 +52,12 @@ func (s *VisitService) StartVisit(ctx context.Context, dto models.StartVisitDTO,
 		return nil, apperrors.NotFound("Patient")
 	}
 
+	// Check if patient has any incomplete visits
+	incompleteVisit, err := s.visitRepo.GetIncompleteByPatient(ctx, clinicID, patientID)
+	if err == nil && incompleteVisit != nil {
+		return nil, apperrors.BadRequest("Bu bemor uchun tugallanmagan vizit mavjud. Avval uni yakunlang.")
+	}
+
 	visit := &models.Visit{
 		ClinicID:  clinicID,
 		PatientID: patientID,
