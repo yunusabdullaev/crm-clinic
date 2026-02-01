@@ -68,7 +68,10 @@ export default function AdminDashboard() {
 
     const openInviteModal = (clinic: any) => {
         setSelectedClinic(clinic);
-        setInviteEmail('');
+        // Auto-fill with clinic phone (remove +998 prefix if present)
+        const phone = clinic.phone || '';
+        const cleanPhone = phone.replace(/^\+998/, '').replace(/[^0-9]/g, '');
+        setInviteEmail(cleanPhone);
         setInviteResult(null);
         setShowModal('invite');
     };
