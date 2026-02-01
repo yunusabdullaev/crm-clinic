@@ -10,6 +10,16 @@
   --text: #1e293b;
   --text-muted: #64748b;
   --border: #e2e8f0;
+  --icon-color: #0891b2;
+  /* Teal/Cyan color for icons */
+}
+
+/* Global icon styling */
+svg.lucide,
+.icon,
+[class*="lucide-"] {
+  color: var(--icon-color);
+  stroke: var(--icon-color);
 }
 
 .dark {
@@ -24,6 +34,8 @@
   --text: #f1f5f9;
   --text-muted: #94a3b8;
   --border: #334155;
+  --icon-color: #22d3ee;
+  /* Lighter teal for dark mode */
 }
 
 * {
