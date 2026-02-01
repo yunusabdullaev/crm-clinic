@@ -31,12 +31,12 @@ func GetIndexes() []IndexDefinition {
 			Name:       "idx_clinics_name_unique",
 		},
 
-		// Users
+		// Users - phone-based authentication
 		{
 			Collection: "users",
-			Keys:       bson.D{{Key: "email", Value: 1}},
+			Keys:       bson.D{{Key: "phone", Value: 1}},
 			Unique:     true,
-			Name:       "idx_users_email_unique",
+			Name:       "idx_users_phone_unique",
 		},
 		{
 			Collection: "users",
