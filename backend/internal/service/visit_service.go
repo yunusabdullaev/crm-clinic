@@ -52,12 +52,6 @@ func (s *VisitService) StartVisit(ctx context.Context, dto models.StartVisitDTO,
 		return nil, apperrors.NotFound("Patient")
 	}
 
-	// Check if patient has any incomplete visits
-	incompleteVisit, err := s.visitRepo.GetIncompleteByPatient(ctx, clinicID, patientID)
-	if err == nil && incompleteVisit != nil {
-		return nil, apperrors.BadRequest("Bu bemor uchun tugallanmagan vizit mavjud. Avval uni yakunlang.")
-	}
-
 	visit := &models.Visit{
 		ClinicID:  clinicID,
 		PatientID: patientID,
@@ -219,14 +213,25 @@ func (s *VisitService) CompleteVisit(ctx context.Context, id, clinicID primitive
 }
 
 // ListByDoctor returns visits for a doctor on a date
+// Filters out visits where the patient has older incomplete visits
 func (s *VisitService) ListByDoctor(ctx context.Context, clinicID, doctorID primitive.ObjectID, date string) ([]models.VisitResponse, error) {
 	visits, err := s.visitRepo.ListByDoctor(ctx, clinicID, doctorID, date)
 	if err != nil {
 		return nil, apperrors.InternalWithErr("Failed to list visits", err)
 	}
 
-	responses := make([]models.VisitResponse, len(visits))
-	for i, v := range visits {
+	var responses []models.VisitResponse
+	for _, v := range visits {
+		// If visit is not completed, check if patient has older incomplete visits
+		if v.Status != models.VisitStatusCompleted {
+			// Check for older incomplete visits for this patient
+			olderIncomplete, err := s.visitRepo.GetOlderIncompleteVisit(ctx, clinicID, v.PatientID, v.ID)
+			if err == nil && olderIncomplete != nil {
+				// Patient has older incomplete visit, skip this visit from list
+				continue
+			}
+		}
+
 		resp := v.ToResponse()
 
 		// Fetch patient name
@@ -235,7 +240,12 @@ func (s *VisitService) ListByDoctor(ctx context.Context, clinicID, doctorID prim
 			resp.PatientName = patient.FirstName + " " + patient.LastName
 		}
 
-		responses[i] = resp
+		responses = append(responses, resp)
+	}
+
+	// Return empty slice if no visits
+	if responses == nil {
+		responses = []models.VisitResponse{}
 	}
 
 	return responses, nil

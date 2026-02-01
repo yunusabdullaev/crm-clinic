@@ -246,3 +246,32 @@ func (r *VisitRepository) GetIncompleteByPatient(ctx context.Context, clinicID, 
 	}
 	return &visit, nil
 }
+
+// GetOlderIncompleteVisit finds an incomplete visit for a patient that is older than the given visit ID
+func (r *VisitRepository) GetOlderIncompleteVisit(ctx context.Context, clinicID, patientID, currentVisitID primitive.ObjectID) (*models.Visit, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	filter := bson.M{
+		"clinic_id":  clinicID,
+		"patient_id": patientID,
+		"status":     models.VisitStatusStarted,
+		"_id":        bson.M{"$ne": currentVisitID}, // Exclude current visit
+	}
+
+	// Sort by created_at ascending to get the oldest incomplete visit
+	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: 1}})
+
+	var visit models.Visit
+	err := r.collection.FindOne(ctx, filter, opts).Decode(&visit)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if found visit was created before current visit
+	if visit.ID.Timestamp().Before(currentVisitID.Timestamp()) {
+		return &visit, nil
+	}
+
+	return nil, mongo.ErrNoDocuments
+}
