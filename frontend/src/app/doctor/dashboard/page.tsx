@@ -37,6 +37,8 @@ export default function DoctorDashboard() {
     const [appointmentSelectedPatient, setAppointmentSelectedPatient] = useState<any>(null);
     const [showPatientDropdown, setShowPatientDropdown] = useState(false);
     const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', doctor_id: '', date: '', hour: '', minute: '' });
+    const [showNewPatientForm, setShowNewPatientForm] = useState(false);
+    const [newPatientForm, setNewPatientForm] = useState({ first_name: '', last_name: '', phone: '', gender: 'male' });
     const HOURS = [...Array.from({ length: 15 }, (_, i) => (9 + i).toString().padStart(2, '0')), '00'];
     const MINUTES = ['00', '15', '30', '45'];
 
@@ -246,7 +248,34 @@ export default function DoctorDashboard() {
         setAppointmentSelectedPatient(null);
         setAppointmentFilteredPatients([]);
         setShowPatientDropdown(false);
+        setShowNewPatientForm(false);
+        setNewPatientForm({ first_name: '', last_name: '', phone: '', gender: 'male' });
         setShowModal('appointment');
+    };
+
+    const createInlinePatient = async () => {
+        if (!newPatientForm.first_name || !newPatientForm.last_name || !newPatientForm.phone) {
+            alert('Barcha maydonlarni to\'ldiring');
+            return;
+        }
+        try {
+            const result: any = await api.createPatient({
+                first_name: newPatientForm.first_name,
+                last_name: newPatientForm.last_name,
+                phone: '+998' + newPatientForm.phone,
+                gender: newPatientForm.gender,
+            });
+            // Select the new patient
+            const newPatient = result.patient || result;
+            setAppointmentSelectedPatient(newPatient);
+            setAppointmentPatientSearch(`${newPatient.first_name} ${newPatient.last_name}`);
+            setAppointmentForm({ ...appointmentForm, patient_id: newPatient.id });
+            setShowNewPatientForm(false);
+            setNewPatientForm({ first_name: '', last_name: '', phone: '', gender: 'male' });
+            alert('Bemor yaratildi!');
+        } catch (err: any) {
+            alert(err.message);
+        }
     };
 
     const handleCreateAppointment = async (e: React.FormEvent) => {
@@ -1453,7 +1482,60 @@ export default function DoctorDashboard() {
                             <form onSubmit={handleCreateAppointment}>
                                 {/* Patient Search */}
                                 <div className="form-group">
-                                    <label>Bemor</label>
+                                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>Bemor</span>
+                                        <button
+                                            type="button"
+                                            className="btn btn-success"
+                                            style={{ padding: '4px 8px', fontSize: 12 }}
+                                            onClick={() => setShowNewPatientForm(!showNewPatientForm)}
+                                        >
+                                            <Plus size={14} /> Yangi bemor
+                                        </button>
+                                    </label>
+
+                                    {/* Inline New Patient Form */}
+                                    {showNewPatientForm && (
+                                        <div style={{ background: '#f0f9ff', padding: 12, borderRadius: 8, marginBottom: 12, border: '1px solid #60a5fa' }}>
+                                            <div style={{ marginBottom: 8 }}>
+                                                <input
+                                                    className="input"
+                                                    placeholder="Ism"
+                                                    value={newPatientForm.first_name}
+                                                    onChange={(e) => setNewPatientForm({ ...newPatientForm, first_name: e.target.value })}
+                                                    style={{ marginBottom: 8 }}
+                                                />
+                                                <input
+                                                    className="input"
+                                                    placeholder="Familiya"
+                                                    value={newPatientForm.last_name}
+                                                    onChange={(e) => setNewPatientForm({ ...newPatientForm, last_name: e.target.value })}
+                                                    style={{ marginBottom: 8 }}
+                                                />
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+                                                    <span style={{ color: '#666' }}>+998</span>
+                                                    <input
+                                                        className="input"
+                                                        placeholder="901234567"
+                                                        value={newPatientForm.phone}
+                                                        onChange={(e) => setNewPatientForm({ ...newPatientForm, phone: e.target.value.replace(/\D/g, '').slice(0, 9) })}
+                                                    />
+                                                </div>
+                                                <select
+                                                    className="input"
+                                                    value={newPatientForm.gender}
+                                                    onChange={(e) => setNewPatientForm({ ...newPatientForm, gender: e.target.value })}
+                                                >
+                                                    <option value="male">Erkak</option>
+                                                    <option value="female">Ayol</option>
+                                                </select>
+                                            </div>
+                                            <button type="button" className="btn btn-primary" onClick={createInlinePatient}>
+                                                Bemor yaratish
+                                            </button>
+                                        </div>
+                                    )}
+
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ position: 'relative' }}>
                                             <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />

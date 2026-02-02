@@ -181,10 +181,10 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 			patients.DELETE("/:id", receptionistHandler.DeletePatient)
 		}
 
-		// Appointment routes (receptionist and boss can access)
+		// Appointment routes (all clinic staff can access)
 		appointments := v1.Group("/appointments")
 		appointments.Use(middleware.Auth(cfg.JWTAccessSecret))
-		appointments.Use(middleware.BossOrReceptionist())
+		appointments.Use(middleware.ClinicStaff())
 		appointments.Use(middleware.TenantIsolation())
 		{
 			appointments.POST("", receptionistHandler.CreateAppointment)
