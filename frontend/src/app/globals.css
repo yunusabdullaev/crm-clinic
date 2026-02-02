@@ -386,6 +386,61 @@ body {
 .dark .input {
   background: var(--bg);
   color: var(--text);
+  border-color: var(--border);
+}
+
+.dark .input:focus {
+  border-color: var(--primary);
+}
+
+.dark select.input {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.dark select.input option {
+  background: var(--card);
+  color: var(--text);
+}
+
+.dark .badge {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .badge-scheduled {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.dark .badge-confirmed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.dark .badge-in_progress {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.dark .badge-completed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.dark .badge-cancelled {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+/* Success and error backgrounds for dark mode */
+.dark [style*="background: #dcfce7"],
+.dark [style*="background:#dcfce7"] {
+  background: rgba(34, 197, 94, 0.2) !important;
+}
+
+.dark [style*="background: #fef2f2"],
+.dark [style*="background:#fef2f2"] {
+  background: rgba(239, 68, 68, 0.2) !important;
 }
 
 /* Settings link in nav */

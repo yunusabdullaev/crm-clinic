@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Plus, Search, Settings, Upload, Download, Calendar, Users, ClipboardList, Monitor, UserX } from 'lucide-react';
+import { Plus, Search, Settings, Upload, Download, Calendar, Users, ClipboardList, Monitor, UserX, PackageOpen, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const INITIAL_PATIENT_FORM = { first_name: '', last_name: '', phone: '', gender: '' };
@@ -645,7 +645,6 @@ export default function ReceptionistDashboard() {
                                         <option value="">{t('common.select')}</option>
                                         <option value="male">{t('patients.male')}</option>
                                         <option value="female">{t('patients.female')}</option>
-                                        <option value="other">{t('patients.other')}</option>
                                     </select>
                                 </div>
                                 <div style={{ display: 'flex', gap: 8 }}>
@@ -766,7 +765,6 @@ export default function ReceptionistDashboard() {
                                                     <option value="">{t('common.select')}</option>
                                                     <option value="male">{t('patients.male')}</option>
                                                     <option value="female">{t('patients.female')}</option>
-                                                    <option value="other">{t('patients.other')}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -840,41 +838,41 @@ export default function ReceptionistDashboard() {
                 {showModal === 'importPatients' && (
                     <div className="modal-overlay" onClick={closeModal}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
-                            <h2>📥 Bemorlarni import qilish</h2>
+                            <h2><PackageOpen size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('import.patientsTitle')}</h2>
 
                             {importResult ? (
                                 <div>
                                     <div style={{ padding: 16, background: importResult.imported > 0 ? '#dcfce7' : '#fef2f2', borderRadius: 8, marginBottom: 16 }}>
                                         <p style={{ fontWeight: 600, marginBottom: 8 }}>
-                                            ✅ {importResult.imported} ta bemor muvaffaqiyatli import qilindi
+                                            <CheckCircle size={16} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{importResult.imported} {t('import.patientsSuccess')}
                                         </p>
                                         {importResult.errors.length > 0 && (
                                             <div style={{ color: '#dc2626' }}>
-                                                <p style={{ fontWeight: 500 }}>Xatolar:</p>
+                                                <p style={{ fontWeight: 500 }}>{t('import.errors')}:</p>
                                                 <ul style={{ marginLeft: 16, fontSize: 14 }}>
                                                     {importResult.errors.slice(0, 5).map((err, i) => (
                                                         <li key={i}>{err}</li>
                                                     ))}
-                                                    {importResult.errors.length > 5 && <li>... va yana {importResult.errors.length - 5} ta</li>}
+                                                    {importResult.errors.length > 5 && <li>... {t('import.andMore')} {importResult.errors.length - 5}</li>}
                                                 </ul>
                                             </div>
                                         )}
                                     </div>
-                                    <button className="btn btn-primary" onClick={closeModal}>Yopish</button>
+                                    <button className="btn btn-primary" onClick={closeModal}>{t('import.close')}</button>
                                 </div>
                             ) : (
                                 <>
-                                    <p style={{ marginBottom: 12, color: '#64748b' }}>Excel format: <b>Ism, Familiya, Telefon, Jins</b></p>
+                                    <p style={{ marginBottom: 12, color: 'var(--text-muted)' }}>{t('import.excelFormat')}: <b>{t('import.firstName')}, {t('import.lastName')}, {t('import.phone')}, {t('import.gender')}</b></p>
 
                                     <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
                                         <table className="table" style={{ fontSize: 14 }}>
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
-                                                    <th>Ism</th>
-                                                    <th>Familiya</th>
-                                                    <th>Telefon</th>
-                                                    <th>Jins</th>
+                                                    <th>{t('import.firstName')}</th>
+                                                    <th>{t('import.lastName')}</th>
+                                                    <th>{t('import.phone')}</th>
+                                                    <th>{t('import.gender')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -892,9 +890,9 @@ export default function ReceptionistDashboard() {
                                     </div>
 
                                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                        <button className="btn btn-secondary" onClick={closeModal}>Bekor qilish</button>
+                                        <button className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button>
                                         <button className="btn btn-primary" onClick={handleConfirmImport} disabled={importing || importPreview.length === 0}>
-                                            {importing ? 'Import qilinmoqda...' : `${importPreview.length} ta bemorni import qilish`}
+                                            {importing ? t('import.importing') : `${importPreview.length} ${t('import.importPatients')}`}
                                         </button>
                                     </div>
                                 </>

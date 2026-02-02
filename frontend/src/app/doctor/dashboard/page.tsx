@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Settings, Download, Users, History, Calendar, Stethoscope, Search, Phone, ClipboardList, ArrowLeft, Inbox, FileText, Activity, Wrench, Camera } from 'lucide-react';
+import { Settings, Download, Calendar, Stethoscope, Users, History, Search, Phone, ClipboardList, ArrowLeft, Inbox, Activity, FileText, Wrench, Camera, CheckCircle, MessageSquare } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function DoctorDashboard() {
@@ -1104,7 +1104,7 @@ export default function DoctorDashboard() {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>📝 Izoh / Komentariy</label>
+                                    <label><MessageSquare size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Izoh / Komentariy</label>
                                     <textarea
                                         className="input"
                                         rows={2}
@@ -1115,7 +1115,7 @@ export default function DoctorDashboard() {
                                 </div>
                                 {/* X-ray Image Upload Section */}
                                 <div className="form-group">
-                                    <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}>📷 Rentgen fotolari</label>
+                                    <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}><Camera size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Rentgen fotolari</label>
                                     <div style={{
                                         background: '#f8fafc',
                                         borderRadius: 12,

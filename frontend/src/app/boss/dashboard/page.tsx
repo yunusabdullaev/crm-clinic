@@ -7,7 +7,8 @@ import { useSettings } from '@/lib/settings';
 import {
     BarChart3, Users, Briefcase, FileText, Receipt, Wallet,
     Activity, Settings, LogOut, Plus, Trash2, UserPlus, Building2,
-    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload, Eye, EyeOff, Download
+    DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload, Eye, EyeOff, Download,
+    CheckCircle, XCircle, Pencil, PackageOpen
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useRef } from 'react';
@@ -356,7 +357,7 @@ export default function BossDashboard() {
                                     <td>{u.first_name} {u.last_name}</td>
                                     <td>{u.email}</td>
                                     <td>{u.role}</td>
-                                    <td>{u.is_active ? `✅ ${t('common.active')}` : `❌ ${t('common.inactive')}`}</td>
+                                    <td>{u.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td>
                                     <td>
                                         {u.role === 'doctor' ? (
                                             <button
@@ -364,7 +365,7 @@ export default function BossDashboard() {
                                                 style={{ fontSize: '12px', padding: '4px 10px' }}
                                                 onClick={() => toggleDiscountPermission(u.id)}
                                             >
-                                                {discountPermissions[u.id] ? '✅ Ruxsat' : '❌ Ruxsat yo\'q'}
+                                                {discountPermissions[u.id] ? <><CheckCircle size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ruxsat</> : <><XCircle size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ruxsat yo'q</>}
                                             </button>
                                         ) : '-'}
                                     </td>
@@ -401,10 +402,10 @@ export default function BossDashboard() {
                                 <td>{s.name}</td>
                                 <td>{s.price.toLocaleString()} UZS</td>
                                 <td>{s.duration} min</td>
-                                <td>{s.is_active ? `✅ ${t('common.active')}` : `❌ ${t('common.inactive')}`}</td>
+                                <td>{s.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td>
                                 <td>
-                                    <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px', marginRight: 4 }} onClick={() => openEditServiceModal(s)}>✏️ {t('common.edit')}</button>
-                                    <button className="btn btn-danger" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteService(s.id)}>🗑️</button>
+                                    <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px', marginRight: 4 }} onClick={() => openEditServiceModal(s)}><Pencil size={14} style={{ marginRight: 2 }} />{t('common.edit')}</button>
+                                    <button className="btn btn-danger" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteService(s.id)}><Trash2 size={14} /></button>
                                 </td>
                             </tr>))}</tbody>
                         </table>
@@ -417,7 +418,7 @@ export default function BossDashboard() {
                         {contracts.length === 0 ? <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>{t('contracts.noContracts')}</p> : (
                             <table className="table">
                                 <thead><tr><th>{t('appointments.doctor')}</th><th>{t('contracts.sharePercent')}</th><th>{t('contracts.startDate')}</th><th>{t('contracts.endDate')}</th><th>{t('common.status')}</th><th>{t('common.actions')}</th></tr></thead>
-                                <tbody>{contracts.map((c) => (<tr key={c.id}><td>{getDoctorName(c.doctor_id)}</td><td>{c.share_percentage}%</td><td>{c.start_date}</td><td>{c.end_date || t('contracts.ongoing')}</td><td>{c.is_active ? `✅ ${t('common.active')}` : `❌ ${t('common.inactive')}`}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteContract(c.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
+                                <tbody>{contracts.map((c) => (<tr key={c.id}><td>{getDoctorName(c.doctor_id)}</td><td>{c.share_percentage}%</td><td>{c.start_date}</td><td>{c.end_date || t('contracts.ongoing')}</td><td>{c.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteContract(c.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
                             </table>
                         )}
                     </div>
@@ -441,7 +442,7 @@ export default function BossDashboard() {
                         {salaries.length === 0 ? <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>{t('salaries.noSalaries')}</p> : (
                             <table className="table">
                                 <thead><tr><th>{t('nav.staff')}</th><th>{t('salaries.monthlyAmount')}</th><th>{t('salaries.effectiveFrom')}</th><th>{t('common.status')}</th><th>{t('common.actions')}</th></tr></thead>
-                                <tbody>{salaries.map((s) => (<tr key={s.id}><td>{getStaffName(s.user_id)}</td><td>{s.monthly_amount.toLocaleString()} UZS</td><td>{s.effective_from}</td><td>{s.is_active ? `✅ ${t('common.active')}` : `❌ ${t('common.inactive')}`}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteSalary(s.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
+                                <tbody>{salaries.map((s) => (<tr key={s.id}><td>{getStaffName(s.user_id)}</td><td>{s.monthly_amount.toLocaleString()} UZS</td><td>{s.effective_from}</td><td>{s.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteSalary(s.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
                             </table>
                         )}
                     </div>
@@ -516,7 +517,7 @@ export default function BossDashboard() {
                 {showModal === 'editService' && (
                     <div className="modal-overlay" onClick={closeModal}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} key={modalKey}>
-                            <h2>✏️ Xizmatni tahrirlash</h2>
+                            <h2><Pencil size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Xizmatni tahrirlash</h2>
                             <form onSubmit={handleEditService}>
                                 <div className="form-group"><label>{t('services.name')}</label><input className="input" value={editServiceForm.name} onChange={(e) => setEditServiceForm({ ...editServiceForm, name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('services.description')}</label><input className="input" value={editServiceForm.description} onChange={(e) => setEditServiceForm({ ...editServiceForm, description: e.target.value })} /></div>
@@ -586,41 +587,41 @@ export default function BossDashboard() {
                 {showModal === 'importServices' && (
                     <div className="modal-overlay" onClick={closeModal}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
-                            <h2>📥 Xizmatlarni import qilish</h2>
+                            <h2><PackageOpen size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('import.servicesTitle')}</h2>
 
                             {serviceImportResult ? (
                                 <div>
                                     <div style={{ padding: 16, background: serviceImportResult.imported > 0 ? '#dcfce7' : '#fef2f2', borderRadius: 8, marginBottom: 16 }}>
                                         <p style={{ fontWeight: 600, marginBottom: 8 }}>
-                                            ✅ {serviceImportResult.imported} ta xizmat muvaffaqiyatli import qilindi
+                                            <CheckCircle size={16} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{serviceImportResult.imported} {t('import.servicesSuccess')}
                                         </p>
                                         {serviceImportResult.errors.length > 0 && (
                                             <div style={{ color: '#dc2626' }}>
-                                                <p style={{ fontWeight: 500 }}>Xatolar:</p>
+                                                <p style={{ fontWeight: 500 }}>{t('import.errors')}:</p>
                                                 <ul style={{ marginLeft: 16, fontSize: 14 }}>
                                                     {serviceImportResult.errors.slice(0, 5).map((err, i) => (
                                                         <li key={i}>{err}</li>
                                                     ))}
-                                                    {serviceImportResult.errors.length > 5 && <li>... va yana {serviceImportResult.errors.length - 5} ta</li>}
+                                                    {serviceImportResult.errors.length > 5 && <li>... {t('import.andMore')} {serviceImportResult.errors.length - 5}</li>}
                                                 </ul>
                                             </div>
                                         )}
                                     </div>
-                                    <button className="btn btn-primary" onClick={closeModal}>Yopish</button>
+                                    <button className="btn btn-primary" onClick={closeModal}>{t('import.close')}</button>
                                 </div>
                             ) : (
                                 <>
-                                    <p style={{ marginBottom: 12, color: '#64748b' }}>Excel format: <b>Nom, Tavsif, Narx, Davomiylik (min)</b></p>
+                                    <p style={{ marginBottom: 12, color: 'var(--text-muted)' }}>{t('import.excelFormat')}: <b>{t('import.name')}, {t('import.description')}, {t('import.price')}, {t('import.duration')}</b></p>
 
                                     <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
                                         <table className="table" style={{ fontSize: 14 }}>
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
-                                                    <th>Nom</th>
-                                                    <th>Tavsif</th>
-                                                    <th>Narx</th>
-                                                    <th>Min</th>
+                                                    <th>{t('import.name')}</th>
+                                                    <th>{t('import.description')}</th>
+                                                    <th>{t('import.price')}</th>
+                                                    <th>{t('common.duration')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -638,9 +639,9 @@ export default function BossDashboard() {
                                     </div>
 
                                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                        <button className="btn btn-secondary" onClick={closeModal}>Bekor qilish</button>
+                                        <button className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button>
                                         <button className="btn btn-primary" onClick={handleConfirmServiceImport} disabled={serviceImporting || serviceImportPreview.length === 0}>
-                                            {serviceImporting ? 'Import qilinmoqda...' : `${serviceImportPreview.length} ta xizmatni import qilish`}
+                                            {serviceImporting ? t('import.importing') : `${serviceImportPreview.length} ${t('import.importServices')}`}
                                         </button>
                                     </div>
                                 </>
