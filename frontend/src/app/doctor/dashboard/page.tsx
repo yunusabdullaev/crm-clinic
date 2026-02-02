@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Settings, Download, Calendar, Stethoscope, Users, History, Search, Phone, ClipboardList, ArrowLeft, Inbox, Activity, FileText, Wrench, Camera, CheckCircle, MessageSquare } from 'lucide-react';
+import { Settings, Download, Calendar, Stethoscope, Users, History, Search, Phone, ClipboardList, ArrowLeft, Inbox, Activity, FileText, Wrench, Camera, CheckCircle, MessageSquare, Plus, UserX } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function DoctorDashboard() {
@@ -29,6 +29,16 @@ export default function DoctorDashboard() {
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [patientVisits, setPatientVisits] = useState<any[]>([]);
     const [selectedPatientVisit, setSelectedPatientVisit] = useState<any>(null);
+
+    // Appointment booking state
+    const [doctors, setDoctors] = useState<any[]>([]);
+    const [appointmentPatientSearch, setAppointmentPatientSearch] = useState('');
+    const [appointmentFilteredPatients, setAppointmentFilteredPatients] = useState<any[]>([]);
+    const [appointmentSelectedPatient, setAppointmentSelectedPatient] = useState<any>(null);
+    const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+    const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', doctor_id: '', date: '', hour: '', minute: '' });
+    const HOURS = [...Array.from({ length: 15 }, (_, i) => (9 + i).toString().padStart(2, '0')), '00'];
+    const MINUTES = ['00', '15', '30', '45'];
 
     // History date filters
     const [historyDateFrom, setHistoryDateFrom] = useState(() => {
@@ -96,10 +106,11 @@ export default function DoctorDashboard() {
     const loadData = async () => {
         try {
             const today = new Date().toISOString().split('T')[0];
-            const [scheduleData, visitsData, servicesData] = await Promise.all([
+            const [scheduleData, visitsData, servicesData, doctorsData] = await Promise.all([
                 api.getSchedule(dateFrom, dateTo), // Use from/to date range
                 api.getVisits(today),
                 api.getServices(),
+                api.getDoctors(),
             ]);
             // Sort appointments by date/time
             const sortedAppointments = (scheduleData.appointments || []).sort((a: any, b: any) =>
@@ -108,6 +119,7 @@ export default function DoctorDashboard() {
             setAppointments(sortedAppointments);
             setVisits(visitsData.visits || []);
             setServices(servicesData.services || []);
+            setDoctors(doctorsData.doctors || []);
         } catch (err: any) {
             console.error(err);
         } finally {
@@ -183,6 +195,85 @@ export default function DoctorDashboard() {
     const handleStartVisit = async (appointment: any) => {
         try {
             await api.startVisit(appointment.patient_id, appointment.id);
+            loadData();
+        } catch (err: any) {
+            alert(err.message);
+        }
+    };
+
+    // Mark appointment as no_show (kelmadi)
+    const handleMarkNoShow = async (appointmentId: string) => {
+        if (!confirm('Bemor kelmaganini tasdiqlaysizmi?')) return;
+        try {
+            await api.updateAppointmentStatus(appointmentId, 'no_show');
+            loadData();
+        } catch (err: any) {
+            alert(err.message);
+        }
+    };
+
+    // Appointment booking functions
+    const handleAppointmentPatientSearch = async (query: string) => {
+        setAppointmentPatientSearch(query);
+        setAppointmentSelectedPatient(null);
+        setAppointmentForm({ ...appointmentForm, patient_id: '' });
+
+        if (query.length >= 2) {
+            try {
+                const result = await api.getPatients(1, query);
+                setAppointmentFilteredPatients(result.patients || []);
+                setShowPatientDropdown(true);
+            } catch (err) {
+                console.error(err);
+                setAppointmentFilteredPatients([]);
+            }
+        } else {
+            setAppointmentFilteredPatients([]);
+            setShowPatientDropdown(false);
+        }
+    };
+
+    const selectAppointmentPatient = (patient: any) => {
+        setAppointmentSelectedPatient(patient);
+        setAppointmentPatientSearch(`${patient.first_name} ${patient.last_name}`);
+        setAppointmentForm({ ...appointmentForm, patient_id: patient.id });
+        setShowPatientDropdown(false);
+    };
+
+    const openAppointmentModal = () => {
+        setAppointmentForm({ patient_id: '', doctor_id: user?.id || '', date: '', hour: '', minute: '' });
+        setAppointmentPatientSearch('');
+        setAppointmentSelectedPatient(null);
+        setAppointmentFilteredPatients([]);
+        setShowPatientDropdown(false);
+        setShowModal('appointment');
+    };
+
+    const handleCreateAppointment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!appointmentForm.patient_id) {
+            alert('Bemorni tanlang');
+            return;
+        }
+        if (!appointmentForm.doctor_id) {
+            alert('Shifokorni tanlang');
+            return;
+        }
+        if (!appointmentForm.date || !appointmentForm.hour || !appointmentForm.minute) {
+            alert('Sana va vaqtni tanlang');
+            return;
+        }
+
+        const startTime = new Date(`${appointmentForm.date}T${appointmentForm.hour}:${appointmentForm.minute}:00`).toISOString();
+
+        try {
+            await api.createAppointment({
+                patient_id: appointmentForm.patient_id,
+                doctor_id: appointmentForm.doctor_id,
+                start_time: startTime,
+            });
+            alert('Navbat muvaffaqiyatli qo\'shildi!');
+            setShowModal(null);
             loadData();
         } catch (err: any) {
             alert(err.message);
@@ -324,6 +415,9 @@ export default function DoctorDashboard() {
                                     onChange={(e) => setDateTo(e.target.value)}
                                     style={{ maxWidth: 150 }}
                                 />
+                                <button className="btn btn-primary" onClick={openAppointmentModal}>
+                                    <Plus size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Navbat qo'shish
+                                </button>
                             </div>
                         </div>
                         <table className="table">
@@ -344,11 +438,24 @@ export default function DoctorDashboard() {
                                         <td>{a.patient_name || 'Unknown'}</td>
                                         <td><span className={`badge badge-${a.status}`}>{t(`status.${a.status}`)}</span></td>
                                         <td>
-                                            {a.status === 'scheduled' || a.status === 'confirmed' ? (
-                                                <button className="btn btn-success" onClick={() => handleStartVisit(a)}>{t('visits.start')}</button>
-                                            ) : (
-                                                <span>-</span>
-                                            )}
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                {(a.status === 'scheduled' || a.status === 'confirmed') && (
+                                                    <>
+                                                        <button className="btn btn-success" onClick={() => handleStartVisit(a)}>{t('visits.start')}</button>
+                                                        <button
+                                                            className="btn btn-secondary"
+                                                            onClick={() => handleMarkNoShow(a.id)}
+                                                            style={{ backgroundColor: '#ef4444', color: 'white' }}
+                                                            title="Kelmadi"
+                                                        >
+                                                            <UserX size={16} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {a.status !== 'scheduled' && a.status !== 'confirmed' && (
+                                                    <span>-</span>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -1335,6 +1442,121 @@ export default function DoctorDashboard() {
                                 fontSize: 20
                             }}
                         >×</button>
+                    </div>
+                )}
+
+                {/* Appointment Booking Modal */}
+                {showModal === 'appointment' && (
+                    <div className="modal-overlay" onClick={() => setShowModal(null)}>
+                        <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
+                            <h2><Plus size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />Navbat qo'shish</h2>
+                            <form onSubmit={handleCreateAppointment}>
+                                {/* Patient Search */}
+                                <div className="form-group">
+                                    <label>Bemor</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'relative' }}>
+                                            <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+                                            <input
+                                                className="input"
+                                                style={{ paddingLeft: 36 }}
+                                                placeholder="Bemor qidirish..."
+                                                value={appointmentPatientSearch}
+                                                onChange={(e) => handleAppointmentPatientSearch(e.target.value)}
+                                                onFocus={() => appointmentPatientSearch.length >= 2 && setShowPatientDropdown(true)}
+                                            />
+                                        </div>
+                                        {showPatientDropdown && appointmentFilteredPatients.length > 0 && (
+                                            <div className="patient-search-dropdown">
+                                                {appointmentFilteredPatients.map((p) => (
+                                                    <div
+                                                        key={p.id}
+                                                        className="patient-search-item"
+                                                        onClick={() => selectAppointmentPatient(p)}
+                                                    >
+                                                        <div className="patient-search-item-name">{p.first_name} {p.last_name}</div>
+                                                        <div className="patient-search-item-phone">{p.phone}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {showPatientDropdown && appointmentFilteredPatients.length === 0 && appointmentPatientSearch.length >= 2 && (
+                                            <div className="patient-search-empty">Bemor topilmadi</div>
+                                        )}
+                                    </div>
+                                    {appointmentSelectedPatient && (
+                                        <div className="patient-selected">
+                                            ✓ {appointmentSelectedPatient.first_name} {appointmentSelectedPatient.last_name} ({appointmentSelectedPatient.phone})
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Doctor Selection */}
+                                <div className="form-group">
+                                    <label>Shifokor</label>
+                                    <select
+                                        className="input"
+                                        value={appointmentForm.doctor_id}
+                                        onChange={(e) => setAppointmentForm({ ...appointmentForm, doctor_id: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">Shifokorni tanlang</option>
+                                        {doctors.map((d) => (
+                                            <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Date and Time */}
+                                <div style={{ display: 'flex', gap: 12 }}>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>Sana</label>
+                                        <input
+                                            className="input"
+                                            type="date"
+                                            value={appointmentForm.date}
+                                            onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>Vaqt</label>
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <select
+                                                className="input"
+                                                style={{ flex: 1 }}
+                                                value={appointmentForm.hour}
+                                                onChange={(e) => setAppointmentForm({ ...appointmentForm, hour: e.target.value })}
+                                                required
+                                            >
+                                                <option value="">Soat</option>
+                                                {HOURS.map((h) => (
+                                                    <option key={h} value={h}>{h}</option>
+                                                ))}
+                                            </select>
+                                            <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+                                            <select
+                                                className="input"
+                                                style={{ flex: 1 }}
+                                                value={appointmentForm.minute}
+                                                onChange={(e) => setAppointmentForm({ ...appointmentForm, minute: e.target.value })}
+                                                required
+                                            >
+                                                <option value="">Minut</option>
+                                                {MINUTES.map((m) => (
+                                                    <option key={m} value={m}>{m}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button type="submit" className="btn btn-primary">Navbat qo'shish</button>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(null)}>Bekor qilish</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
             </div>
