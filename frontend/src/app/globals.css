@@ -432,15 +432,153 @@ body {
   color: #fca5a5;
 }
 
-/* Success and error backgrounds for dark mode */
+/* ===== Comprehensive Dark Mode Overrides for Inline Styles ===== */
+
+/* White backgrounds → dark card */
+.dark [style*="background: #fff"],
+.dark [style*="background:#fff"],
+.dark [style*="background: white"],
+.dark [style*="background:white"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* Light gray backgrounds → dark bg */
+.dark [style*="background: #f8fafc"],
+.dark [style*="background:#f8fafc"],
+.dark [style*="background: #f1f5f9"],
+.dark [style*="background:#f1f5f9"] {
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+}
+
+/* Success/green backgrounds */
 .dark [style*="background: #dcfce7"],
 .dark [style*="background:#dcfce7"] {
   background: rgba(34, 197, 94, 0.2) !important;
 }
 
+.dark [style*="background: #f0fdf4"],
+.dark [style*="background:#f0fdf4"] {
+  background: rgba(34, 197, 94, 0.15) !important;
+}
+
+.dark [style*="background: #ecfdf5"],
+.dark [style*="background:#ecfdf5"] {
+  background: rgba(34, 197, 94, 0.15) !important;
+}
+
+/* Error/red backgrounds */
 .dark [style*="background: #fef2f2"],
 .dark [style*="background:#fef2f2"] {
   background: rgba(239, 68, 68, 0.2) !important;
+}
+
+.dark [style*="background: #fee2e2"],
+.dark [style*="background:#fee2e2"] {
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Blue/info backgrounds */
+.dark [style*="background: #e0f2fe"],
+.dark [style*="background:#e0f2fe"] {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark [style*="background: #dbeafe"],
+.dark [style*="background:#dbeafe"] {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark [style*="background: #ebf5ff"],
+.dark [style*="background:#ebf5ff"] {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Warning/amber backgrounds */
+.dark [style*="background: #fef3c7"],
+.dark [style*="background:#fef3c7"] {
+  background: rgba(245, 158, 11, 0.2) !important;
+}
+
+/* ===== Dark Mode Text Color Overrides ===== */
+
+/* Dark text on dark bg → light text */
+.dark [style*="color: #1e293b"],
+.dark [style*="color:#1e293b"],
+.dark [style*="color: #1f2937"],
+.dark [style*="color:#1f2937"],
+.dark [style*="color: #334155"],
+.dark [style*="color:#334155"] {
+  color: var(--text) !important;
+}
+
+/* Muted text */
+.dark [style*="color: #64748b"],
+.dark [style*="color:#64748b"],
+.dark [style*="color: #475569"],
+.dark [style*="color:#475569"],
+.dark [style*="color: #6b7280"],
+.dark [style*="color:#6b7280"],
+.dark [style*="color: #9ca3af"],
+.dark [style*="color:#9ca3af"] {
+  color: var(--text-muted) !important;
+}
+
+/* Green accent text */
+.dark [style*="color: #059669"],
+.dark [style*="color:#059669"],
+.dark [style*="color: #15803d"],
+.dark [style*="color:#15803d"],
+.dark [style*="color: #16a34a"],
+.dark [style*="color:#16a34a"],
+.dark [style*="color: #047857"],
+.dark [style*="color:#047857"] {
+  color: #4ade80 !important;
+}
+
+/* Red accent text */
+.dark [style*="color: #dc2626"],
+.dark [style*="color:#dc2626"],
+.dark [style*="color: #b91c1c"],
+.dark [style*="color:#b91c1c"],
+.dark [style*="color: #991b1b"],
+.dark [style*="color:#991b1b"] {
+  color: #fca5a5 !important;
+}
+
+/* Blue accent text */
+.dark [style*="color: #1e40af"],
+.dark [style*="color:#1e40af"],
+.dark [style*="color: #1d4ed8"],
+.dark [style*="color:#1d4ed8"] {
+  color: #93c5fd !important;
+}
+
+/* Amber accent text */
+.dark [style*="color: #92400e"],
+.dark [style*="color:#92400e"],
+.dark [style*="color: #b45309"],
+.dark [style*="color:#b45309"] {
+  color: #fcd34d !important;
+}
+
+/* ===== Dark Mode Border Overrides ===== */
+.dark [style*="border: 1px solid #e2e8f0"],
+.dark [style*="border:1px solid #e2e8f0"] {
+  border-color: var(--border) !important;
+}
+
+.dark [style*="border-bottom: 1px solid #e2e8f0"],
+.dark [style*="border-bottom: 1px solid #f1f5f9"],
+.dark [style*="borderBottom: 1px solid #e2e8f0"] {
+  border-color: var(--border) !important;
+}
+
+/* Option select in dark */
+.dark select option {
+  background: var(--card) !important;
+  color: var(--text) !important;
 }
 
 /* Settings link in nav */
