@@ -519,10 +519,10 @@ export default function DoctorDashboard() {
                                                 }}
                                                 style={{
                                                     padding: 16,
-                                                    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                                                    background: 'var(--card)',
                                                     borderRadius: 12,
                                                     cursor: 'pointer',
-                                                    border: '1px solid #e2e8f0',
+                                                    border: '1px solid var(--border)',
                                                     transition: 'all 0.2s ease',
                                                 }}
                                                 onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -533,7 +533,7 @@ export default function DoctorDashboard() {
                                                         width: 48,
                                                         height: 48,
                                                         borderRadius: '50%',
-                                                        background: '#3b82f6',
+                                                        background: 'var(--primary)',
                                                         color: 'white',
                                                         display: 'flex',
                                                         alignItems: 'center',
@@ -545,7 +545,7 @@ export default function DoctorDashboard() {
                                                     </div>
                                                     <div>
                                                         <div style={{ fontWeight: 600 }}>{p.first_name} {p.last_name}</div>
-                                                        <div style={{ color: '#64748b', fontSize: 13 }}>{p.phone}</div>
+                                                        <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{p.phone}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -605,10 +605,10 @@ export default function DoctorDashboard() {
                                                 onClick={() => setSelectedPatientVisit(v)}
                                                 style={{
                                                     padding: 16,
-                                                    background: v.status === 'completed' ? '#f0fdf4' : '#fef3c7',
+                                                    background: v.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
                                                     borderRadius: 8,
                                                     cursor: 'pointer',
-                                                    border: '1px solid ' + (v.status === 'completed' ? '#86efac' : '#fcd34d'),
+                                                    border: '1px solid ' + (v.status === 'completed' ? 'var(--success)' : 'var(--warning)'),
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -616,7 +616,7 @@ export default function DoctorDashboard() {
                                                         <div style={{ fontWeight: 600 }}>
                                                             <Calendar size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{new Date(v.completed_at || v.created_at).toLocaleDateString('uz-UZ')}
                                                         </div>
-                                                        <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+                                                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
                                                             {v.diagnosis || t('doctor.noDiagnosis')}
                                                         </div>
                                                     </div>
@@ -624,7 +624,7 @@ export default function DoctorDashboard() {
                                                         <span className={`badge badge-${v.status}`}>
                                                             {v.status === 'completed' ? t('status.completed') : t('status.started')}
                                                         </span>
-                                                        <div style={{ fontWeight: 600, color: '#059669', marginTop: 4 }}>
+                                                        <div style={{ fontWeight: 600, color: 'var(--success)', marginTop: 4 }}>
                                                             {(v.total || 0).toLocaleString()} UZS
                                                         </div>
                                                     </div>
@@ -679,7 +679,7 @@ export default function DoctorDashboard() {
                                         {selectedPatientVisit.affected_teeth.map((t: string) => (
                                             <span key={t} style={{
                                                 padding: '4px 10px',
-                                                background: '#3b82f6',
+                                                background: 'var(--primary)',
                                                 color: 'white',
                                                 borderRadius: 12,
                                                 fontSize: 13
@@ -778,7 +778,7 @@ export default function DoctorDashboard() {
                                             alt="Tooth Formula"
                                             style={{ width: '100%', maxWidth: 500, display: 'block', margin: '0 auto 16px' }}
                                         />
-                                        <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12, textAlign: 'center' }}>
+                                        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>
                                             {t('visits.selectAffectedTeeth')}
                                         </p>
                                         {/* Upper teeth row */}
@@ -833,7 +833,7 @@ export default function DoctorDashboard() {
                                         </div>
                                         {visitForm.affected_teeth.length > 0 && (
                                             <div style={{ marginTop: 12, padding: 8, background: 'var(--bg)', borderRadius: 8, textAlign: 'center' }}>
-                                                <span style={{ fontSize: 12, color: '#dc2626' }}>
+                                                <span style={{ fontSize: 12, color: 'var(--danger)' }}>
                                                     {t('visits.affectedTeeth')}: <strong>{visitForm.affected_teeth.sort((a, b) => parseInt(a) - parseInt(b)).join(', ')}</strong>
                                                 </span>
                                             </div>
@@ -879,8 +879,8 @@ export default function DoctorDashboard() {
                                                         setVisitForm({ ...visitForm, planSteps: newSteps });
                                                     }}
                                                     style={{
-                                                        background: '#fee2e2',
-                                                        color: '#dc2626',
+                                                        background: 'rgba(239, 68, 68, 0.15)',
+                                                        color: 'var(--danger)',
                                                         border: 'none',
                                                         borderRadius: 6,
                                                         padding: '4px 8px',
@@ -1000,7 +1000,7 @@ export default function DoctorDashboard() {
                                                                 justifyContent: 'space-between',
                                                                 padding: '12px 16px',
                                                                 borderBottom: '1px solid var(--border)',
-                                                                background: isSelected ? '#f0fdf4' : 'transparent',
+                                                                background: isSelected ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
                                                                 cursor: 'pointer',
                                                                 transition: 'background 0.2s'
                                                             }}
@@ -1042,7 +1042,7 @@ export default function DoctorDashboard() {
                                                                             }}
                                                                             style={{
                                                                                 width: 28, height: 28, borderRadius: 6,
-                                                                                background: '#fee2e2', color: '#dc2626',
+                                                                                background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)',
                                                                                 border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 'bold'
                                                                             }}
                                                                         >−</button>
@@ -1052,7 +1052,7 @@ export default function DoctorDashboard() {
                                                                             onClick={() => handleAddService(s.id)}
                                                                             style={{
                                                                                 width: 28, height: 28, borderRadius: 6,
-                                                                                background: '#dcfce7', color: '#16a34a',
+                                                                                background: 'rgba(34, 197, 94, 0.15)', color: 'var(--success)',
                                                                                 border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 'bold'
                                                                             }}
                                                                         >+</button>
@@ -1228,7 +1228,7 @@ export default function DoctorDashboard() {
                                                                 width: 22,
                                                                 height: 22,
                                                                 borderRadius: '50%',
-                                                                background: '#ef4444',
+                                                                background: 'var(--danger)',
                                                                 color: 'white',
                                                                 border: 'none',
                                                                 cursor: 'pointer',
@@ -1380,7 +1380,7 @@ export default function DoctorDashboard() {
                                                     style={{ marginBottom: 8 }}
                                                 />
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-                                                    <span style={{ color: '#666' }}>+998</span>
+                                                    <span style={{ color: 'var(--text-muted)' }}>+998</span>
                                                     <input
                                                         className="input"
                                                         placeholder="901234567"
@@ -1405,7 +1405,7 @@ export default function DoctorDashboard() {
 
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ position: 'relative' }}>
-                                            <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+                                            <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                             <input
                                                 className="input"
                                                 style={{ paddingLeft: 36 }}

@@ -357,7 +357,7 @@ export default function BossDashboard() {
                                     <td>{u.first_name} {u.last_name}</td>
                                     <td>{u.email}</td>
                                     <td>{u.role}</td>
-                                    <td>{u.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td>
+                                    <td>{u.is_active ? <><CheckCircle size={14} style={{ color: 'var(--success)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: 'var(--danger)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td>
                                     <td>
                                         {u.role === 'doctor' ? (
                                             <button
@@ -402,7 +402,7 @@ export default function BossDashboard() {
                                 <td>{s.name}</td>
                                 <td>{s.price.toLocaleString()} UZS</td>
                                 <td>{s.duration} min</td>
-                                <td>{s.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td>
+                                <td>{s.is_active ? <><CheckCircle size={14} style={{ color: 'var(--success)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: 'var(--danger)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td>
                                 <td>
                                     <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px', marginRight: 4 }} onClick={() => openEditServiceModal(s)}><Pencil size={14} style={{ marginRight: 2 }} />{t('common.edit')}</button>
                                     <button className="btn btn-danger" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteService(s.id)}><Trash2 size={14} /></button>
@@ -415,10 +415,10 @@ export default function BossDashboard() {
                 {activeTab === 'contracts' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h3><FileText size={18} style={{ marginRight: '6px' }} />{t('contracts.title')}</h3><button className="btn btn-primary" onClick={() => openModal('contract')}><Plus size={16} style={{ marginRight: '4px' }} />{t('contracts.add')}</button></div>
-                        {contracts.length === 0 ? <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>{t('contracts.noContracts')}</p> : (
+                        {contracts.length === 0 ? <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>{t('contracts.noContracts')}</p> : (
                             <table className="table">
                                 <thead><tr><th>{t('appointments.doctor')}</th><th>{t('contracts.sharePercent')}</th><th>{t('contracts.startDate')}</th><th>{t('contracts.endDate')}</th><th>{t('common.status')}</th><th>{t('common.actions')}</th></tr></thead>
-                                <tbody>{contracts.map((c) => (<tr key={c.id}><td>{getDoctorName(c.doctor_id)}</td><td>{c.share_percentage}%</td><td>{c.start_date}</td><td>{c.end_date || t('contracts.ongoing')}</td><td>{c.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteContract(c.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
+                                <tbody>{contracts.map((c) => (<tr key={c.id}><td>{getDoctorName(c.doctor_id)}</td><td>{c.share_percentage}%</td><td>{c.start_date}</td><td>{c.end_date || t('contracts.ongoing')}</td><td>{c.is_active ? <><CheckCircle size={14} style={{ color: 'var(--success)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: 'var(--danger)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteContract(c.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
                             </table>
                         )}
                     </div>
@@ -427,7 +427,7 @@ export default function BossDashboard() {
                 {activeTab === 'expenses' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h3><Receipt size={18} style={{ marginRight: '6px' }} />{t('expenses.title')}</h3><button className="btn btn-primary" onClick={() => openModal('expense')}><Plus size={16} style={{ marginRight: '4px' }} />{t('expenses.add')}</button></div>
-                        {expenses.length === 0 ? <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>{t('expenses.noExpenses')}</p> : (
+                        {expenses.length === 0 ? <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>{t('expenses.noExpenses')}</p> : (
                             <table className="table">
                                 <thead><tr><th>{t('common.date')}</th><th>{t('expenses.category')}</th><th>{t('common.amount')}</th><th>{t('common.notes')}</th><th>{t('common.actions')}</th></tr></thead>
                                 <tbody>{expenses.map((e) => (<tr key={e.id}><td>{e.date}</td><td style={{ textTransform: 'capitalize' }}>{e.category}</td><td>{e.amount.toLocaleString()} UZS</td><td>{e.note || '-'}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteExpense(e.id)}>{t('common.delete')}</button></td></tr>))}</tbody>
@@ -439,10 +439,10 @@ export default function BossDashboard() {
                 {activeTab === 'salaries' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h3><Wallet size={18} style={{ marginRight: '6px' }} />{t('salaries.title')}</h3><button className="btn btn-primary" onClick={() => openModal('salary')}><Plus size={16} style={{ marginRight: '4px' }} />{t('salaries.add')}</button></div>
-                        {salaries.length === 0 ? <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>{t('salaries.noSalaries')}</p> : (
+                        {salaries.length === 0 ? <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>{t('salaries.noSalaries')}</p> : (
                             <table className="table">
                                 <thead><tr><th>{t('nav.staff')}</th><th>{t('salaries.monthlyAmount')}</th><th>{t('salaries.effectiveFrom')}</th><th>{t('common.status')}</th><th>{t('common.actions')}</th></tr></thead>
-                                <tbody>{salaries.map((s) => (<tr key={s.id}><td>{getStaffName(s.user_id)}</td><td>{s.monthly_amount.toLocaleString()} UZS</td><td>{s.effective_from}</td><td>{s.is_active ? <><CheckCircle size={14} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: '#ef4444', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteSalary(s.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
+                                <tbody>{salaries.map((s) => (<tr key={s.id}><td>{getStaffName(s.user_id)}</td><td>{s.monthly_amount.toLocaleString()} UZS</td><td>{s.effective_from}</td><td>{s.is_active ? <><CheckCircle size={14} style={{ color: 'var(--success)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.active')}</> : <><XCircle size={14} style={{ color: 'var(--danger)', marginRight: 4, verticalAlign: 'middle' }} />{t('common.inactive')}</>}</td><td><button className="btn btn-secondary" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => handleDeleteSalary(s.id)}><Trash2 size={14} style={{ marginRight: '2px' }} />{t('common.delete')}</button></td></tr>))}</tbody>
                             </table>
                         )}
                     </div>
@@ -457,7 +457,7 @@ export default function BossDashboard() {
                                 {doctors.map((d) => (<option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>))}
                             </select>
                         </div>
-                        {auditLogs.length === 0 ? <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>{t('activity.noLogs')}</p> : (
+                        {auditLogs.length === 0 ? <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>{t('activity.noLogs')}</p> : (
                             <table className="table">
                                 <thead><tr><th>{t('common.time')}</th><th>{t('appointments.doctor')}</th><th>{t('activity.action')}</th><th>{t('activity.entity')}</th><th>{t('activity.details')}</th></tr></thead>
                                 <tbody>
@@ -467,7 +467,7 @@ export default function BossDashboard() {
                                             <td>{log.actor_name || 'Unknown'}</td>
                                             <td>{formatActionLabel(log.action)}</td>
                                             <td style={{ textTransform: 'capitalize' }}>{log.entity_type}</td>
-                                            <td style={{ fontSize: '12px', color: '#666' }}>
+                                            <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                                 {log.meta && Object.entries(log.meta).map(([k, v]) => (
                                                     <span key={k} style={{ marginRight: '8px' }}><strong>{k}:</strong> {String(v)}</span>
                                                 ))}
@@ -490,7 +490,7 @@ export default function BossDashboard() {
                                 <div className="form-group"><label>{t('patients.firstName')}</label><input className="input" value={userForm.first_name} onChange={(e) => setUserForm({ ...userForm, first_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('patients.lastName')}</label><input className="input" value={userForm.last_name} onChange={(e) => setUserForm({ ...userForm, last_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('staff.role')}</label><select className="input" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="doctor">{t('staff.doctor')}</option><option value="receptionist">{t('staff.receptionist')}</option></select></div>
-                                <div className="form-group"><label>{t('login.password')}</label><div style={{ position: 'relative' }}><input className="input" type={showUserPassword ? 'text' : 'password'} style={{ paddingRight: 40 }} value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={8} /><button type="button" onClick={() => setShowUserPassword(!showUserPassword)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#64748b' }}>{showUserPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button></div></div>
+                                <div className="form-group"><label>{t('login.password')}</label><div style={{ position: 'relative' }}><input className="input" type={showUserPassword ? 'text' : 'password'} style={{ paddingRight: 40 }} value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={8} /><button type="button" onClick={() => setShowUserPassword(!showUserPassword)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)' }}>{showUserPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button></div></div>
                                 <div style={{ display: 'flex', gap: 8 }}><button type="submit" className="btn btn-primary">{t('common.create')}</button><button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button></div>
                             </form>
                         </div>
@@ -591,12 +591,12 @@ export default function BossDashboard() {
 
                             {serviceImportResult ? (
                                 <div>
-                                    <div style={{ padding: 16, background: serviceImportResult.imported > 0 ? '#dcfce7' : '#fef2f2', borderRadius: 8, marginBottom: 16 }}>
+                                    <div style={{ padding: 16, background: serviceImportResult.imported > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.1)', borderRadius: 8, marginBottom: 16 }}>
                                         <p style={{ fontWeight: 600, marginBottom: 8 }}>
-                                            <CheckCircle size={16} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{serviceImportResult.imported} {t('import.servicesSuccess')}
+                                            <CheckCircle size={16} style={{ color: 'var(--success)', marginRight: 4, verticalAlign: 'middle' }} />{serviceImportResult.imported} {t('import.servicesSuccess')}
                                         </p>
                                         {serviceImportResult.errors.length > 0 && (
-                                            <div style={{ color: '#dc2626' }}>
+                                            <div style={{ color: 'var(--danger)' }}>
                                                 <p style={{ fontWeight: 500 }}>{t('import.errors')}:</p>
                                                 <ul style={{ marginLeft: 16, fontSize: 14 }}>
                                                     {serviceImportResult.errors.slice(0, 5).map((err, i) => (

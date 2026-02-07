@@ -516,10 +516,10 @@ export default function ReceptionistDashboard() {
 
                                 return (
                                     <div key={doctor.id} style={{
-                                        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                                        background: 'var(--card)',
                                         borderRadius: 12,
                                         padding: 16,
-                                        border: '1px solid #e2e8f0'
+                                        border: '1px solid var(--border)'
                                     }}>
                                         <div style={{
                                             display: 'flex',
@@ -527,13 +527,13 @@ export default function ReceptionistDashboard() {
                                             gap: 12,
                                             marginBottom: 12,
                                             paddingBottom: 12,
-                                            borderBottom: '2px solid #3b82f6'
+                                            borderBottom: '2px solid var(--primary)'
                                         }}>
                                             <div style={{
                                                 width: 48,
                                                 height: 48,
                                                 borderRadius: '50%',
-                                                background: '#3b82f6',
+                                                background: 'var(--primary)',
                                                 color: 'white',
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -547,7 +547,7 @@ export default function ReceptionistDashboard() {
                                                 <div style={{ fontWeight: 600, fontSize: 16 }}>
                                                     Dr. {doctor.first_name} {doctor.last_name}
                                                 </div>
-                                                <div style={{ color: '#64748b', fontSize: 13 }}>
+                                                <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
                                                     {doctorAppointments.length} {t('receptionist.appointments')}
                                                 </div>
                                             </div>
@@ -577,14 +577,14 @@ export default function ReceptionistDashboard() {
                                                                 alignItems: 'center',
                                                                 gap: 12,
                                                                 padding: '10px 14px',
-                                                                background: 'white',
+                                                                background: 'var(--card)',
                                                                 borderRadius: 8,
-                                                                border: '1px solid #e2e8f0',
+                                                                border: '1px solid var(--border)',
                                                                 boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                                                             }}>
                                                                 <div style={{
                                                                     fontWeight: 600,
-                                                                    color: '#3b82f6',
+                                                                    color: 'var(--primary)',
                                                                     fontSize: 14,
                                                                     minWidth: 100
                                                                 }}>
@@ -667,7 +667,7 @@ export default function ReceptionistDashboard() {
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                         <div style={{ position: 'relative', flex: 1 }}>
                                             <div style={{ position: 'relative' }}>
-                                                <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+                                                <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                                 <input
                                                     className="input"
                                                     style={{ paddingLeft: 36 }}
@@ -842,12 +842,12 @@ export default function ReceptionistDashboard() {
 
                             {importResult ? (
                                 <div>
-                                    <div style={{ padding: 16, background: importResult.imported > 0 ? '#dcfce7' : '#fef2f2', borderRadius: 8, marginBottom: 16 }}>
+                                    <div style={{ padding: 16, background: importResult.imported > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.1)', borderRadius: 8, marginBottom: 16 }}>
                                         <p style={{ fontWeight: 600, marginBottom: 8 }}>
-                                            <CheckCircle size={16} style={{ color: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />{importResult.imported} {t('import.patientsSuccess')}
+                                            <CheckCircle size={16} style={{ color: 'var(--success)', marginRight: 4, verticalAlign: 'middle' }} />{importResult.imported} {t('import.patientsSuccess')}
                                         </p>
                                         {importResult.errors.length > 0 && (
-                                            <div style={{ color: '#dc2626' }}>
+                                            <div style={{ color: 'var(--danger)' }}>
                                                 <p style={{ fontWeight: 500 }}>{t('import.errors')}:</p>
                                                 <ul style={{ marginLeft: 16, fontSize: 14 }}>
                                                     {importResult.errors.slice(0, 5).map((err, i) => (

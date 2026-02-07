@@ -62,8 +62,8 @@ export default function AppointmentsDisplayPage() {
                 <tbody>
                     {appointments.map((a, index) => (
                         <tr key={a.id} style={{
-                            backgroundColor: index % 2 === 0 ? '#f8fafc' : 'white',
-                            borderBottom: '1px solid #e2e8f0'
+                            backgroundColor: index % 2 === 0 ? 'var(--bg)' : 'var(--card)',
+                            borderBottom: '1px solid var(--border)'
                         }}>
                             <td style={{ padding: 16, fontSize: 22, fontWeight: 600 }}>
                                 {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -81,12 +81,12 @@ export default function AppointmentsDisplayPage() {
                                     borderRadius: 8,
                                     fontSize: 18,
                                     fontWeight: 600,
-                                    backgroundColor: a.status === 'scheduled' ? '#dbeafe' :
-                                        a.status === 'in_progress' ? '#fef3c7' :
-                                            a.status === 'completed' ? '#d1fae5' : '#fee2e2',
-                                    color: a.status === 'scheduled' ? '#1e40af' :
-                                        a.status === 'in_progress' ? '#92400e' :
-                                            a.status === 'completed' ? '#065f46' : '#991b1b'
+                                    backgroundColor: a.status === 'scheduled' ? 'rgba(37, 99, 235, 0.15)' :
+                                        a.status === 'in_progress' ? 'rgba(245, 158, 11, 0.15)' :
+                                            a.status === 'completed' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                    color: a.status === 'scheduled' ? '#3b82f6' :
+                                        a.status === 'in_progress' ? '#f59e0b' :
+                                            a.status === 'completed' ? '#22c55e' : '#ef4444'
                                 }}>
                                     {a.status === 'scheduled' ? t('display.scheduled') :
                                         a.status === 'in_progress' ? t('display.inProgress') :
@@ -101,7 +101,7 @@ export default function AppointmentsDisplayPage() {
                                 padding: 40,
                                 textAlign: 'center',
                                 fontSize: 24,
-                                color: '#64748b'
+                                color: 'var(--text-muted)'
                             }}>
                                 {t('display.noAppointments')}
                             </td>

@@ -69,7 +69,7 @@ export default function AcceptInvitePage() {
         border: 'none',
         cursor: 'pointer',
         padding: 4,
-        color: '#64748b'
+        color: 'var(--text-muted)'
     };
 
     if (!token) {

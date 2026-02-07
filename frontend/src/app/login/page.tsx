@@ -97,7 +97,7 @@ export default function LoginPage() {
                                     border: 'none',
                                     cursor: 'pointer',
                                     padding: 4,
-                                    color: '#64748b'
+                                    color: 'var(--text-muted)'
                                 }}
                             >
                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
