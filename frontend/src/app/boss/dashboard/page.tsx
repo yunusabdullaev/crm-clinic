@@ -540,7 +540,7 @@ export default function BossDashboard() {
                                                                 color: '#a78bfa',
                                                                 fontWeight: 500,
                                                             }}>
-                                                                📋 {log.meta.diagnosis}
+                                                                <ClipboardList size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{log.meta.diagnosis}
                                                             </span>
                                                         )}
 
@@ -554,7 +554,7 @@ export default function BossDashboard() {
                                                                 color: '#4ade80',
                                                                 fontWeight: 600,
                                                             }}>
-                                                                💰 {Number(log.meta.total).toLocaleString()} UZS
+                                                                <DollarSign size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{Number(log.meta.total).toLocaleString()} UZS
                                                             </span>
                                                         )}
 
@@ -568,7 +568,7 @@ export default function BossDashboard() {
                                                                 color: '#60a5fa',
                                                                 fontWeight: 500,
                                                             }}>
-                                                                🩺 {t('reports.doctorEarnings')}: {Number(log.meta.doctor_earning).toLocaleString()} UZS
+                                                                <Stethoscope size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('reports.doctorEarnings')}: {Number(log.meta.doctor_earning).toLocaleString()} UZS
                                                             </span>
                                                         )}
 
@@ -583,7 +583,7 @@ export default function BossDashboard() {
                                                                 fontWeight: 600,
                                                                 textTransform: 'capitalize',
                                                             }}>
-                                                                → {(log.meta.new_status as string).replace('_', ' ')}
+                                                                <TrendingUp size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{(log.meta.new_status as string).replace('_', ' ')}
                                                             </span>
                                                         )}
                                                     </div>
