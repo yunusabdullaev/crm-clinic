@@ -109,6 +109,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
+  background: var(--card);
+  color: var(--text);
   transition: border-color 0.2s;
 }
 
@@ -384,7 +386,7 @@ body {
 }
 
 .dark .input {
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   border-color: var(--border);
 }
@@ -394,7 +396,7 @@ body {
 }
 
 .dark select.input {
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text);
 }
 
