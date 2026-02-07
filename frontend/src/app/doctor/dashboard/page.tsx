@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
-import { Settings, Download, Calendar, Stethoscope, Users, History, Search, Phone, ClipboardList, ArrowLeft, Inbox, Activity, FileText, Wrench, Camera, CheckCircle, MessageSquare, Plus, UserX } from 'lucide-react';
+import { Settings, Download, Calendar, Stethoscope, Users, Search, Phone, ClipboardList, ArrowLeft, Inbox, Activity, FileText, Wrench, Camera, CheckCircle, MessageSquare, Plus, UserX } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function DoctorDashboard() {
@@ -14,7 +14,6 @@ export default function DoctorDashboard() {
     const [activeTab, setActiveTab] = useState('schedule');
     const [appointments, setAppointments] = useState<any[]>([]);
     const [visits, setVisits] = useState<any[]>([]);
-    const [visitHistory, setVisitHistory] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [serviceSearch, setServiceSearch] = useState('');
     const [servicesExpanded, setServicesExpanded] = useState(false);
@@ -41,14 +40,6 @@ export default function DoctorDashboard() {
     const [newPatientForm, setNewPatientForm] = useState({ first_name: '', last_name: '', phone: '', gender: 'male' });
     const HOURS = [...Array.from({ length: 15 }, (_, i) => (9 + i).toString().padStart(2, '0')), '00'];
     const MINUTES = ['00', '15', '30', '45'];
-
-    // History date filters
-    const [historyDateFrom, setHistoryDateFrom] = useState(() => {
-        const d = new Date();
-        d.setDate(d.getDate() - 30); // Last 30 days
-        return d.toISOString().split('T')[0];
-    });
-    const [historyDateTo, setHistoryDateTo] = useState(new Date().toISOString().split('T')[0]);
 
     // Date filters
     const [dateFrom, setDateFrom] = useState(new Date().toISOString().split('T')[0]);
@@ -129,19 +120,6 @@ export default function DoctorDashboard() {
         }
     };
 
-    const loadHistory = async () => {
-        try {
-            const historyData = await api.getVisitHistory(historyDateFrom, historyDateTo);
-            // Filter only completed visits
-            const completedVisits = (historyData.visits || []).filter((v: any) => v.status === 'completed');
-            // Sort by date descending
-            completedVisits.sort((a: any, b: any) => new Date(b.completed_at || b.created_at).getTime() - new Date(a.completed_at || a.created_at).getTime());
-            setVisitHistory(completedVisits);
-        } catch (err: any) {
-            console.error(err);
-        }
-    };
-
     // Load patients for patient list
     const loadPatients = async (search?: string) => {
         try {
@@ -165,28 +143,6 @@ export default function DoctorDashboard() {
             console.error(err);
             setPatientVisits([]);
         }
-    };
-
-    // Export history to Excel
-    const exportHistoryToExcel = () => {
-        if (visitHistory.length === 0) {
-            alert(t('doctor.exportNoData'));
-            return;
-        }
-
-        const exportData = visitHistory.map((v: any) => ({
-            [t('export.date')]: new Date(v.completed_at || v.created_at).toLocaleDateString(),
-            [t('export.patient')]: v.patient_name || '-',
-            [t('export.diagnosis')]: v.diagnosis || '-',
-            [t('export.services')]: (v.services || []).map((s: any) => `${s.service_name} x${s.quantity}`).join(', '),
-            [t('export.paymentType')]: v.payment_type === 'cash' ? t('export.cash') : t('export.card'),
-            [t('export.totalAmount')]: v.total || v.total_amount || 0
-        }));
-
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, t('export.sheetName'));
-        XLSX.writeFile(workbook, `visit_history_${historyDateFrom}_${historyDateTo}.xlsx`);
     };
 
     const handleLogout = () => {
@@ -421,7 +377,6 @@ export default function DoctorDashboard() {
                     <button className={`tab ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}><Calendar size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('appointments.title')}</button>
                     <button className={`tab ${activeTab === 'visits' ? 'active' : ''}`} onClick={() => setActiveTab('visits')}><Stethoscope size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('visits.today')}</button>
                     <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => { setActiveTab('patients'); loadPatients(); }}><Users size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('patients.title')}</button>
-                    <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); loadHistory(); }}><History size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.history')}</button>
                 </div>
 
                 {activeTab === 'schedule' && (
@@ -530,94 +485,6 @@ export default function DoctorDashboard() {
                                 )}
                             </tbody>
                         </table>
-                    </div>
-                )}
-
-                {activeTab === 'history' && (
-                    <div className="card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('doctor.workHistory')}</h3>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                                <input
-                                    className="input"
-                                    type="date"
-                                    value={historyDateFrom}
-                                    onChange={(e) => setHistoryDateFrom(e.target.value)}
-                                    style={{ maxWidth: 150 }}
-                                />
-                                <span>{t('common.to')}</span>
-                                <input
-                                    className="input"
-                                    type="date"
-                                    value={historyDateTo}
-                                    onChange={(e) => setHistoryDateTo(e.target.value)}
-                                    style={{ maxWidth: 150 }}
-                                />
-                                <button className="btn btn-primary" onClick={loadHistory}><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('common.search')}</button>
-                                <button className="btn btn-success" onClick={exportHistoryToExcel} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <Download size={16} /> Excel
-                                </button>
-                            </div>
-                        </div>
-
-                        {visitHistory.length > 0 ? (
-                            <div style={{ overflowX: 'auto' }}>
-                                <table className="table">
-                                    <thead>
-                                        <tr>
-                                            <th>{t('common.date')}</th>
-                                            <th>{t('appointments.patient')}</th>
-                                            <th>{t('visits.diagnosis')}</th>
-                                            <th>{t('nav.services')}</th>
-                                            <th>{t('visits.total')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {visitHistory.map((v) => (
-                                            <tr key={v.id}>
-                                                <td>{new Date(v.completed_at || v.created_at).toLocaleString()}</td>
-                                                <td>{v.patient_name || t('doctor.unknown')}</td>
-                                                <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {v.diagnosis || '-'}
-                                                </td>
-                                                <td>
-                                                    {(v.services || []).map((s: any, i: number) => (
-                                                        <span key={i} style={{
-                                                            display: 'inline-block',
-                                                            background: '#e0f2fe',
-                                                            padding: '2px 8px',
-                                                            borderRadius: 4,
-                                                            fontSize: 12,
-                                                            marginRight: 4,
-                                                            marginBottom: 2
-                                                        }}>
-                                                            {s.name || s.service_name} x{s.quantity}
-                                                        </span>
-                                                    ))}
-                                                </td>
-                                                <td style={{ fontWeight: 600, color: '#059669' }}>
-                                                    {(v.total_amount || 0).toLocaleString()} UZS
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <div className="empty-state">
-                                <p>📭 {t('doctor.noVisitsInPeriod')}</p>
-                                <p style={{ fontSize: 14, color: '#64748b' }}>{t('doctor.changeDatesHint')}</p>
-                            </div>
-                        )}
-
-                        {visitHistory.length > 0 && (
-                            <div style={{ marginTop: 16, padding: 16, background: '#f0fdf4', borderRadius: 8, textAlign: 'right' }}>
-                                <strong style={{ color: '#15803d' }}>
-                                    {t('visits.total')}: {visitHistory.length} {t('doctor.totalVisits')} |
-                                    {' '}{visitHistory.reduce((sum, v) => sum + (v.total_amount || 0), 0).toLocaleString()} UZS
-                                </strong>
-                            </div>
-                        )}
                     </div>
                 )}
 
