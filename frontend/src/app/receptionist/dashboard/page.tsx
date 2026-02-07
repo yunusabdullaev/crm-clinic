@@ -558,10 +558,10 @@ export default function ReceptionistDashboard() {
                                                 <div style={{
                                                     fontWeight: 600,
                                                     fontSize: 13,
-                                                    color: '#475569',
+                                                    color: 'var(--text-muted)',
                                                     marginBottom: 8,
                                                     padding: '4px 8px',
-                                                    background: '#e2e8f0',
+                                                    background: 'var(--bg)',
                                                     borderRadius: 4,
                                                     display: 'inline-block'
                                                 }}>
@@ -635,7 +635,7 @@ export default function ReceptionistDashboard() {
                                 <div className="form-group">
                                     <label>{t('common.phone')} *</label>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                        <span style={{ padding: '8px 12px', background: 'var(--bg)', borderRadius: 6, fontWeight: 500, color: 'var(--text-muted)' }}>+998</span>
                                         <input className="input" style={{ flex: 1 }} placeholder="90 123 45 67" value={patientForm.phone} onChange={(e) => setPatientForm({ ...patientForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} required maxLength={9} />
                                     </div>
                                 </div>
@@ -743,7 +743,7 @@ export default function ReceptionistDashboard() {
                                             <div className="form-group" style={{ marginBottom: 0 }}>
                                                 <label style={{ fontSize: 12 }}>{t('common.phone')} *</label>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <span style={{ padding: '6px 8px', background: '#f1f5f9', borderRadius: 4, fontWeight: 500, fontSize: 12, color: '#475569' }}>+998</span>
+                                                    <span style={{ padding: '6px 8px', background: 'var(--bg)', borderRadius: 4, fontWeight: 500, fontSize: 12, color: 'var(--text-muted)' }}>+998</span>
                                                     <input
                                                         className="input"
                                                         style={{ flex: 1 }}

@@ -95,7 +95,7 @@ export default function AcceptInvitePage() {
                     <div className="form-group">
                         <label>Telefon raqami *</label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                            <span style={{ padding: '8px 12px', background: 'var(--bg)', borderRadius: 6, fontWeight: 500, color: 'var(--text-muted)' }}>+998</span>
                             <input
                                 type="text"
                                 className="input"

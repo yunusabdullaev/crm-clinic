@@ -194,7 +194,7 @@ export default function AdminDashboard() {
                                 <div className="form-group">
                                     <label>Phone</label>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                        <span style={{ padding: '8px 12px', background: 'var(--bg)', borderRadius: 6, fontWeight: 500, color: 'var(--text-muted)' }}>+998</span>
                                         <input className="input" style={{ flex: 1 }} placeholder="90 123 45 67" value={clinicForm.phone} onChange={(e) => setClinicForm({ ...clinicForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} maxLength={9} />
                                     </div>
                                 </div>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                             {inviteResult ? (
                                 <div>
                                     <p style={{ marginBottom: 16 }}>✅ Invitation created successfully!</p>
-                                    <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+                                    <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 8, marginBottom: 16 }}>
                                         <p><strong>Telefon:</strong> {inviteResult.email}</p>
                                         <p><strong>Token:</strong> {inviteResult.token}</p>
                                         <p><strong>Link:</strong></p>
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
                                             onClick={(e) => (e.target as HTMLInputElement).select()}
                                         />
                                     </div>
-                                    <p style={{ color: '#64748b', fontSize: 14 }}>Copy this link and send it to the boss.</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Copy this link and send it to the boss.</p>
                                     <button className="btn btn-primary" onClick={() => setShowModal(null)}>Done</button>
                                 </div>
                             ) : (
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
                                     <div className="form-group">
                                         <label>Boss Telefon Raqami *</label>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                            <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                            <span style={{ padding: '8px 12px', background: 'var(--bg)', borderRadius: 6, fontWeight: 500, color: 'var(--text-muted)' }}>+998</span>
                                             <input
                                                 className="input"
                                                 type="tel"
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
                                 <div className="form-group">
                                     <label>Phone</label>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span>
+                                        <span style={{ padding: '8px 12px', background: 'var(--bg)', borderRadius: 6, fontWeight: 500, color: 'var(--text-muted)' }}>+998</span>
                                         <input className="input" style={{ flex: 1 }} placeholder="90 123 45 67" value={editClinicForm.phone} onChange={(e) => setEditClinicForm({ ...editClinicForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} maxLength={9} />
                                     </div>
                                 </div>

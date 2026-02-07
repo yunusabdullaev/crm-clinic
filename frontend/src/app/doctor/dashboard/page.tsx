@@ -650,14 +650,14 @@ export default function DoctorDashboard() {
 
                             <div style={{ marginBottom: 16 }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                                    <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
-                                        <div style={{ fontSize: 12, color: '#64748b' }}>{t('common.date')}</div>
+                                    <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8 }}>
+                                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('common.date')}</div>
                                         <div style={{ fontWeight: 600 }}>
                                             {new Date(selectedPatientVisit.completed_at || selectedPatientVisit.created_at).toLocaleDateString('uz-UZ')}
                                         </div>
                                     </div>
-                                    <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
-                                        <div style={{ fontSize: 12, color: '#64748b' }}>{t('common.status')}</div>
+                                    <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8 }}>
+                                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('common.status')}</div>
                                         <span className={`badge badge-${selectedPatientVisit.status}`}>
                                             {selectedPatientVisit.status === 'completed' ? t('status.completed') : t('status.started')}
                                         </span>
@@ -667,7 +667,7 @@ export default function DoctorDashboard() {
 
                             <div style={{ marginBottom: 16 }}>
                                 <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Activity size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('visits.diagnosis')}</label>
-                                <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
                                     {selectedPatientVisit.diagnosis || t('doctor.noDiagnosis')}
                                 </div>
                             </div>
@@ -692,13 +692,13 @@ export default function DoctorDashboard() {
                             {selectedPatientVisit.services?.length > 0 && (
                                 <div style={{ marginBottom: 16 }}>
                                     <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Wrench size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.completedServices')}</label>
-                                    <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                    <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
                                         {selectedPatientVisit.services.map((s: any, i: number) => (
                                             <div key={i} style={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
                                                 padding: '8px 0',
-                                                borderBottom: i < selectedPatientVisit.services.length - 1 ? '1px solid #e2e8f0' : 'none'
+                                                borderBottom: i < selectedPatientVisit.services.length - 1 ? '1px solid var(--border)' : 'none'
                                             }}>
                                                 <span>{s.name || s.service_name} x{s.quantity}</span>
                                                 <span style={{ fontWeight: 600 }}>{((s.price || 0) * (s.quantity || 1)).toLocaleString()} UZS</span>
@@ -732,13 +732,13 @@ export default function DoctorDashboard() {
                             )}
 
                             <div style={{
-                                background: '#f0fdf4',
+                                background: 'rgba(34, 197, 94, 0.15)',
                                 padding: 16,
                                 borderRadius: 8,
                                 textAlign: 'right',
                                 marginBottom: 16
                             }}>
-                                <strong style={{ fontSize: 18, color: '#059669' }}>
+                                <strong style={{ fontSize: 18, color: 'var(--success)' }}>
                                     {t('visits.total')}: {(selectedPatientVisit.total || 0).toLocaleString()} UZS
                                 </strong>
                             </div>
@@ -767,10 +767,10 @@ export default function DoctorDashboard() {
                                 <div className="form-group">
                                     <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}>{t('visits.toothFormula')}</label>
                                     <div style={{
-                                        background: '#fff',
+                                        background: 'var(--card)',
                                         borderRadius: 12,
                                         padding: 16,
-                                        border: '1px solid #e2e8f0',
+                                        border: '1px solid var(--border)',
                                         marginBottom: 8
                                     }}>
                                         <img
@@ -832,7 +832,7 @@ export default function DoctorDashboard() {
                                             ))}
                                         </div>
                                         {visitForm.affected_teeth.length > 0 && (
-                                            <div style={{ marginTop: 12, padding: 8, background: '#fef2f2', borderRadius: 8, textAlign: 'center' }}>
+                                            <div style={{ marginTop: 12, padding: 8, background: 'var(--bg)', borderRadius: 8, textAlign: 'center' }}>
                                                 <span style={{ fontSize: 12, color: '#dc2626' }}>
                                                     {t('visits.affectedTeeth')}: <strong>{visitForm.affected_teeth.sort((a, b) => parseInt(a) - parseInt(b)).join(', ')}</strong>
                                                 </span>
@@ -844,10 +844,10 @@ export default function DoctorDashboard() {
                                 <div className="form-group">
                                     <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}>{t('treatmentPlan.title')}</label>
                                     <div style={{
-                                        background: '#fff',
+                                        background: 'var(--card)',
                                         borderRadius: 12,
                                         padding: 16,
-                                        border: '1px solid #e2e8f0'
+                                        border: '1px solid var(--border)'
                                     }}>
                                         {visitForm.planSteps.map((step, index) => (
                                             <div key={index} style={{
@@ -855,7 +855,7 @@ export default function DoctorDashboard() {
                                                 alignItems: 'center',
                                                 gap: 12,
                                                 padding: '8px 0',
-                                                borderBottom: index < visitForm.planSteps.length - 1 ? '1px solid #e2e8f0' : 'none'
+                                                borderBottom: index < visitForm.planSteps.length - 1 ? '1px solid var(--border)' : 'none'
                                             }}>
                                                 <input
                                                     type="checkbox"
@@ -870,7 +870,7 @@ export default function DoctorDashboard() {
                                                 <span style={{
                                                     flex: 1,
                                                     textDecoration: step.completed ? 'line-through' : 'none',
-                                                    color: step.completed ? '#9ca3af' : '#1f2937'
+                                                    color: step.completed ? 'var(--text-muted)' : 'var(--text)'
                                                 }}>{step.description}</span>
                                                 <button
                                                     type="button"
@@ -938,9 +938,9 @@ export default function DoctorDashboard() {
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             padding: '12px 16px',
-                                            background: '#f8fafc',
+                                            background: 'var(--bg)',
                                             borderRadius: 12,
-                                            border: '1px solid #e2e8f0',
+                                            border: '1px solid var(--border)',
                                             cursor: 'pointer',
                                             marginBottom: servicesExpanded ? 8 : 0
                                         }}
@@ -982,9 +982,9 @@ export default function DoctorDashboard() {
                                                 />
                                             </div>
                                             <div style={{
-                                                background: '#fff',
+                                                background: 'var(--card)',
                                                 borderRadius: 12,
-                                                border: '1px solid #e2e8f0',
+                                                border: '1px solid var(--border)',
                                                 maxHeight: 300,
                                                 overflowY: 'auto'
                                             }}>
@@ -999,7 +999,7 @@ export default function DoctorDashboard() {
                                                                 alignItems: 'center',
                                                                 justifyContent: 'space-between',
                                                                 padding: '12px 16px',
-                                                                borderBottom: '1px solid #f1f5f9',
+                                                                borderBottom: '1px solid var(--border)',
                                                                 background: isSelected ? '#f0fdf4' : 'transparent',
                                                                 cursor: 'pointer',
                                                                 transition: 'background 0.2s'
@@ -1020,8 +1020,8 @@ export default function DoctorDashboard() {
                                                                         style={{ width: 18, height: 18, accentColor: '#22c55e', cursor: 'pointer' }}
                                                                     />
                                                                     <div>
-                                                                        <div style={{ fontWeight: 500, color: '#1f2937', fontSize: 14 }}>{s.name}</div>
-                                                                        <div style={{ fontSize: 12, color: '#64748b' }}>{s.price.toLocaleString()} UZS</div>
+                                                                        <div style={{ fontWeight: 500, color: 'var(--text)', fontSize: 14 }}>{s.name}</div>
+                                                                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.price.toLocaleString()} UZS</div>
                                                                     </div>
                                                                 </div>
                                                                 {isSelected && (
@@ -1065,8 +1065,8 @@ export default function DoctorDashboard() {
                                         </>
                                     )}
                                     {visitForm.services.length > 0 && (
-                                        <div style={{ marginTop: 12, padding: 12, background: '#f0fdf4', borderRadius: 8 }}>
-                                            <div style={{ fontSize: 13, color: '#15803d', fontWeight: 500 }}>
+                                        <div style={{ marginTop: 12, padding: 12, background: 'rgba(34, 197, 94, 0.15)', borderRadius: 8 }}>
+                                            <div style={{ fontSize: 13, color: 'var(--success)', fontWeight: 500 }}>
                                                 ✓ {t('doctor.selectedServices')}: {visitForm.services.length} {t('doctor.servicesCount')}
                                             </div>
                                         </div>
@@ -1120,10 +1120,10 @@ export default function DoctorDashboard() {
                                 <div className="form-group">
                                     <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}><Camera size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />{t('doctor.xrayPhotos')}</label>
                                     <div style={{
-                                        background: '#f8fafc',
+                                        background: 'var(--bg)',
                                         borderRadius: 12,
                                         padding: 16,
-                                        border: '2px dashed #cbd5e1'
+                                        border: '2px dashed var(--border)'
                                     }}>
                                         {/* Upload button */}
                                         <div style={{ marginBottom: 12 }}>
@@ -1191,8 +1191,8 @@ export default function DoctorDashboard() {
                                                         paddingTop: '100%',
                                                         borderRadius: 8,
                                                         overflow: 'hidden',
-                                                        border: '1px solid #e2e8f0',
-                                                        background: '#fff'
+                                                        border: '1px solid var(--border)',
+                                                        background: 'var(--card)'
                                                     }}>
                                                         <img
                                                             src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${url}`}
@@ -1245,13 +1245,13 @@ export default function DoctorDashboard() {
                                         )}
 
                                         {visitForm.xray_images.length === 0 && (
-                                            <p style={{ color: '#94a3b8', fontSize: 13, margin: 0, textAlign: 'center' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0, textAlign: 'center' }}>
                                                 {t('doctor.xrayUploadHint')}
                                             </p>
                                         )}
                                     </div>
                                 </div>
-                                <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+                                <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 8, marginBottom: 16 }}>
                                     <strong>{t('visits.total')}: {calculateTotal().toLocaleString()} UZS</strong>
                                 </div>
                                 <div style={{ display: 'flex', gap: 8 }}>
@@ -1363,7 +1363,7 @@ export default function DoctorDashboard() {
 
                                     {/* Inline New Patient Form */}
                                     {showNewPatientForm && (
-                                        <div style={{ background: '#f0f9ff', padding: 12, borderRadius: 8, marginBottom: 12, border: '1px solid #60a5fa' }}>
+                                        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: 12, borderRadius: 8, marginBottom: 12, border: '1px solid var(--primary)' }}>
                                             <div style={{ marginBottom: 8 }}>
                                                 <input
                                                     className="input"
