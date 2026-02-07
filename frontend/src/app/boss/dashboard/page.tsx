@@ -8,7 +8,7 @@ import {
     BarChart3, Users, Briefcase, FileText, Receipt, Wallet,
     Activity, Settings, LogOut, Plus, Trash2, UserPlus, Building2,
     DollarSign, CalendarDays, TrendingUp, Stethoscope, ClipboardList, Upload, Eye, EyeOff, Download,
-    CheckCircle, XCircle, Pencil, PackageOpen
+    CheckCircle, XCircle, Pencil, PackageOpen, Clock
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useRef } from 'react';
@@ -458,24 +458,141 @@ export default function BossDashboard() {
                             </select>
                         </div>
                         {auditLogs.length === 0 ? <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>{t('activity.noLogs')}</p> : (
-                            <table className="table">
-                                <thead><tr><th>{t('common.time')}</th><th>{t('appointments.doctor')}</th><th>{t('activity.action')}</th><th>{t('activity.entity')}</th><th>{t('activity.details')}</th></tr></thead>
-                                <tbody>
-                                    {auditLogs.map((log) => (
-                                        <tr key={log.id}>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{new Date(log.created_at).toLocaleString()}</td>
-                                            <td>{log.actor_name || 'Unknown'}</td>
-                                            <td>{formatActionLabel(log.action)}</td>
-                                            <td style={{ textTransform: 'capitalize' }}>{log.entity_type}</td>
-                                            <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                                                {log.meta && Object.entries(log.meta).map(([k, v]) => (
-                                                    <span key={k} style={{ marginRight: '8px' }}><strong>{k}:</strong> {String(v)}</span>
-                                                ))}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                {auditLogs.map((log) => {
+                                    const isVisitFinished = log.action === 'VISIT_FINISHED';
+                                    const isVisitStarted = log.action === 'VISIT_STARTED';
+                                    const isStatusChanged = log.action === 'APPOINTMENT_STATUS_CHANGED';
+
+                                    const actionColor = isVisitFinished ? 'var(--success)' : isVisitStarted ? 'var(--primary)' : 'var(--warning, #f59e0b)';
+                                    const actionBg = isVisitFinished ? 'rgba(34,197,94,0.1)' : isVisitStarted ? 'rgba(59,130,246,0.1)' : 'rgba(245,158,11,0.1)';
+
+                                    const statusColors: Record<string, string> = {
+                                        'scheduled': '#3b82f6',
+                                        'confirmed': '#8b5cf6',
+                                        'in_progress': '#f59e0b',
+                                        'completed': '#22c55e',
+                                        'cancelled': '#ef4444',
+                                        'no_show': '#6b7280',
+                                    };
+
+                                    return (
+                                        <div key={log.id} style={{
+                                            padding: '14px 16px',
+                                            background: 'var(--bg)',
+                                            borderRadius: 10,
+                                            border: '1px solid var(--border)',
+                                            display: 'flex',
+                                            alignItems: 'flex-start',
+                                            gap: 14,
+                                        }}>
+                                            {/* Action indicator dot */}
+                                            <div style={{
+                                                width: 38,
+                                                height: 38,
+                                                borderRadius: '50%',
+                                                background: actionBg,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                marginTop: 2,
+                                            }}>
+                                                {isVisitFinished && <CheckCircle size={18} style={{ color: actionColor }} />}
+                                                {isVisitStarted && <Activity size={18} style={{ color: actionColor }} />}
+                                                {isStatusChanged && <Clock size={18} style={{ color: actionColor }} />}
+                                            </div>
+
+                                            {/* Content */}
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                {/* Top row: action + doctor + time */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span style={{
+                                                            padding: '3px 10px',
+                                                            borderRadius: 20,
+                                                            fontSize: 12,
+                                                            fontWeight: 600,
+                                                            background: actionBg,
+                                                            color: actionColor,
+                                                        }}>
+                                                            {formatActionLabel(log.action)}
+                                                        </span>
+                                                        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
+                                                            {log.actor_name || 'Unknown'}
+                                                        </span>
+                                                    </div>
+                                                    <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                                        {new Date(log.created_at).toLocaleString()}
+                                                    </span>
+                                                </div>
+
+                                                {/* Detail chips */}
+                                                {log.meta && (
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                                        {/* Diagnosis */}
+                                                        {log.meta.diagnosis && (
+                                                            <span style={{
+                                                                padding: '4px 12px',
+                                                                borderRadius: 6,
+                                                                fontSize: 13,
+                                                                background: 'rgba(139,92,246,0.1)',
+                                                                color: '#a78bfa',
+                                                                fontWeight: 500,
+                                                            }}>
+                                                                📋 {log.meta.diagnosis}
+                                                            </span>
+                                                        )}
+
+                                                        {/* Total */}
+                                                        {log.meta.total !== undefined && (
+                                                            <span style={{
+                                                                padding: '4px 12px',
+                                                                borderRadius: 6,
+                                                                fontSize: 13,
+                                                                background: 'rgba(34,197,94,0.1)',
+                                                                color: '#4ade80',
+                                                                fontWeight: 600,
+                                                            }}>
+                                                                💰 {Number(log.meta.total).toLocaleString()} UZS
+                                                            </span>
+                                                        )}
+
+                                                        {/* Doctor earning */}
+                                                        {log.meta.doctor_earning !== undefined && Number(log.meta.doctor_earning) > 0 && (
+                                                            <span style={{
+                                                                padding: '4px 12px',
+                                                                borderRadius: 6,
+                                                                fontSize: 13,
+                                                                background: 'rgba(59,130,246,0.1)',
+                                                                color: '#60a5fa',
+                                                                fontWeight: 500,
+                                                            }}>
+                                                                🩺 {t('reports.doctorEarnings')}: {Number(log.meta.doctor_earning).toLocaleString()} UZS
+                                                            </span>
+                                                        )}
+
+                                                        {/* Status change */}
+                                                        {log.meta.new_status && (
+                                                            <span style={{
+                                                                padding: '4px 12px',
+                                                                borderRadius: 6,
+                                                                fontSize: 13,
+                                                                background: `${statusColors[log.meta.new_status as string] || '#6b7280'}22`,
+                                                                color: statusColors[log.meta.new_status as string] || '#6b7280',
+                                                                fontWeight: 600,
+                                                                textTransform: 'capitalize',
+                                                            }}>
+                                                                → {(log.meta.new_status as string).replace('_', ' ')}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 )}
