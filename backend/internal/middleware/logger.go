@@ -3,8 +3,9 @@ package middleware
 import (
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"medical-crm/pkg/logger"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Logger middleware logs all requests with structured fields
@@ -47,6 +48,7 @@ func Logger(log *logger.Logger) gin.HandlerFunc {
 			c.Writer.Status(),
 			latencyMs,
 			c.ClientIP(),
+			c.Request.UserAgent(),
 		)
 	}
 }

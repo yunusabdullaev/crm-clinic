@@ -52,9 +52,11 @@ docker-compose exec backend ./crm seed
 
 ### Default Credentials
 
-| Role | Email | Password |
+> ⚠️ **Do NOT use defaults in production.** Set `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` via environment variables.
+
+| Role | Phone | Password |
 |------|-------|----------|
-| Superadmin | admin@crm.local | Admin123! |
+| Superadmin | *(set via env)* | *(set via env)* |
 
 ## Development Setup
 
@@ -163,21 +165,25 @@ npm run dev
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `ENVIRONMENT` | `development` or `production` | development |
 | `MONGO_URI` | MongoDB connection string | mongodb://mongo:27017 |
 | `MONGO_DB` | Database name | medical_crm |
-| `JWT_ACCESS_SECRET` | JWT access token secret | - |
-| `JWT_REFRESH_SECRET` | JWT refresh token secret | - |
-| `SUPERADMIN_EMAIL` | Initial superadmin email | admin@crm.local |
-| `SUPERADMIN_PASSWORD` | Initial superadmin password | Admin123! |
+| `JWT_ACCESS_SECRET` | JWT access token secret (32+ chars) | *(required in prod)* |
+| `JWT_REFRESH_SECRET` | JWT refresh token secret (32+ chars) | *(required in prod)* |
+| `SUPERADMIN_EMAIL` | Initial superadmin phone | *(required for seed)* |
+| `SUPERADMIN_PASSWORD` | Initial superadmin password | *(required for seed)* |
+| `FRONTEND_URL` | Frontend URL for CORS whitelist | http://localhost:3000 |
+| `ALLOWED_ORIGINS` | Extra CORS origins (comma-separated) | - |
 
 ## Security Notes
 
 ⚠️ **For Production:**
-- Change all default passwords
-- Use strong JWT secrets (32+ characters)
-- Enable HTTPS with proper certificates
-- Configure CORS appropriately
-- Store secrets in environment variables or secrets manager
+- Set `ENVIRONMENT=production` — this enables all security guards
+- Use strong JWT secrets (32+ characters, random)
+- Set `FRONTEND_URL` to your Vercel domain for CORS protection
+- CORS is automatically restricted to your frontend domain only
+- Never commit `.env` files — use platform environment variables
+- Security headers are automatically set: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`
 
 ## License
 

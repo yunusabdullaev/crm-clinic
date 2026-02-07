@@ -28,12 +28,33 @@ func Setup(cfg *config.Config, db *mongo.Database, mongoClient *mongo.Client, lo
 	r.Use(middleware.Recovery(log))
 	r.Use(middleware.Logger(log))
 
-	// CORS middleware
+	// CORS middleware — origin whitelist
 	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		origin := c.GetHeader("Origin")
+		allowed := false
+
+		for _, o := range cfg.AllowedOrigins {
+			if o == origin {
+				allowed = true
+				break
+			}
+		}
+
+		if allowed {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Vary", "Origin")
+		}
+
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Request-ID, X-Frontend-URL")
 		c.Header("Access-Control-Expose-Headers", "X-Request-ID")
+		c.Header("Access-Control-Allow-Credentials", "true")
+
+		// Security headers
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)

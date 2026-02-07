@@ -137,13 +137,14 @@ func (l *Logger) Fatal(msg string, err error) {
 }
 
 // RequestLog logs an HTTP request
-func (l *Logger) RequestLog(method, path string, status int, latencyMs int64, clientIP string) {
+func (l *Logger) RequestLog(method, path string, status int, latencyMs int64, clientIP, userAgent string) {
 	l.zl.Info().
 		Str("method", method).
 		Str("path", path).
 		Int("status", status).
 		Int64("latency_ms", latencyMs).
 		Str("client_ip", clientIP).
+		Str("user_agent", userAgent).
 		Msg("request")
 }
 

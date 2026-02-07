@@ -31,6 +31,11 @@ func main() {
 	log := logger.New(cfg.ServiceName, cfg.Environment)
 	log.Infof("Starting %s in %s mode", cfg.ServiceName, cfg.Environment)
 
+	// Validate configuration (fatal in production with weak secrets)
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(err.Error(), err)
+	}
+
 	// Check if this is a seed command
 	if len(os.Args) > 1 && os.Args[1] == "seed" {
 		runSeed(cfg, log)
@@ -49,8 +54,12 @@ func main() {
 		log.Fatal("Failed to create indexes", err)
 	}
 
-	// Auto-seed superadmin if not exists
-	seedSuperadmin(cfg, db, log)
+	// Auto-seed superadmin if not exists (skipped in production unless credentials are set)
+	if cfg.SeedEnabled() {
+		seedSuperadmin(cfg, db, log)
+	} else {
+		log.Info("Seed skipped: production mode with no explicit credentials")
+	}
 
 	// Setup router
 	r := router.Setup(cfg, db, mongoClient, log)
@@ -139,6 +148,11 @@ func seedSuperadmin(cfg *config.Config, db *mongo.Database, log *logger.Logger) 
 // runSeed creates the initial superadmin and sample data
 func runSeed(cfg *config.Config, log *logger.Logger) {
 	log.Info("Running seed command...")
+
+	if !cfg.SeedEnabled() {
+		log.Info("Seed skipped: no SUPERADMIN_EMAIL/SUPERADMIN_PASSWORD set")
+		return
+	}
 
 	// Connect to MongoDB
 	db, mongoClient, err := database.Connect(cfg.MongoURI, cfg.MongoDB, cfg.MongoTimeout, log)
