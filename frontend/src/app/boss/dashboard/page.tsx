@@ -124,21 +124,21 @@ export default function BossDashboard() {
     // Export services to Excel
     const exportServicesToExcel = () => {
         if (services.length === 0) {
-            alert('Eksport qilish uchun xizmatlar mavjud emas');
+            alert(t('boss.exportNoServices'));
             return;
         }
 
         const exportData = services.map((s: any) => ({
-            'Nomi': s.name || '-',
-            'Tavsif': s.description || '-',
-            'Narxi (UZS)': s.price || 0,
-            'Davomiyligi (daqiqa)': s.duration || 30,
-            'Faol': s.is_active ? 'Ha' : 'Yo\'q'
+            [t('export.serviceName')]: s.name || '-',
+            [t('export.serviceDescription')]: s.description || '-',
+            [t('export.servicePrice')]: s.price || 0,
+            [t('export.serviceDuration')]: s.duration || 30,
+            [t('export.serviceActive')]: s.is_active ? t('export.yes') : t('export.no')
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Xizmatlar');
+        XLSX.utils.book_append_sheet(workbook, worksheet, t('export.servicesSheet'));
         XLSX.writeFile(workbook, `xizmatlar_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
@@ -222,7 +222,7 @@ export default function BossDashboard() {
                 const workbook = XLSX.read(data, { type: 'array' });
 
                 if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-                    alert('Excel faylda varaq topilmadi');
+                    alert(t('boss.excelNoSheet'));
                     return;
                 }
 
@@ -230,14 +230,14 @@ export default function BossDashboard() {
                 const worksheet = workbook.Sheets[sheetName];
 
                 if (!worksheet) {
-                    alert('Excel varaqni o\'qishda xatolik');
+                    alert(t('boss.excelReadError'));
                     return;
                 }
 
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
 
                 if (!jsonData || jsonData.length < 2) {
-                    alert('Excel faylda ma\'lumot topilmadi. Birinchi qatorda sarlavhalar, keyin ma\'lumotlar bo\'lishi kerak.');
+                    alert(t('boss.excelNoData'));
                     return;
                 }
 
@@ -250,7 +250,7 @@ export default function BossDashboard() {
                 }));
 
                 if (services.length === 0) {
-                    alert('Import qilinadigan xizmatlar topilmadi. Format: Nom | Tavsif | Narx | Davomiylik');
+                    alert(t('boss.excelImportFormat'));
                     return;
                 }
 
@@ -259,7 +259,7 @@ export default function BossDashboard() {
                 setShowModal('importServices');
             } catch (err: any) {
                 console.error('Excel import error:', err);
-                alert('Excel faylni o\'qishda xatolik: ' + (err.message || 'Noma\'lum xato'));
+                alert(t('boss.excelImportError') + ': ' + (err.message || t('boss.unknownError')));
             }
         };
         reader.readAsArrayBuffer(file);
@@ -351,7 +351,7 @@ export default function BossDashboard() {
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><h3><Users size={18} style={{ marginRight: '6px' }} />{t('staff.title')}</h3><button className="btn btn-primary" onClick={() => openModal('user')}><Plus size={16} style={{ marginRight: '4px' }} />{t('staff.add')}</button></div>
                         <table className="table">
-                            <thead><tr><th>{t('common.name')}</th><th>{t('common.email')}</th><th>{t('staff.role')}</th><th>{t('common.status')}</th><th>Chegirma</th></tr></thead>
+                            <thead><tr><th>{t('common.name')}</th><th>{t('common.email')}</th><th>{t('staff.role')}</th><th>{t('common.status')}</th><th>{t('boss.discount')}</th></tr></thead>
                             <tbody>{users.map((u) => (
                                 <tr key={u.id}>
                                     <td>{u.first_name} {u.last_name}</td>
@@ -365,7 +365,7 @@ export default function BossDashboard() {
                                                 style={{ fontSize: '12px', padding: '4px 10px' }}
                                                 onClick={() => toggleDiscountPermission(u.id)}
                                             >
-                                                {discountPermissions[u.id] ? <><CheckCircle size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ruxsat</> : <><XCircle size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ruxsat yo'q</>}
+                                                {discountPermissions[u.id] ? <><CheckCircle size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('boss.permitted')}</> : <><XCircle size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('boss.notPermitted')}</>}
                                             </button>
                                         ) : '-'}
                                     </td>
@@ -486,7 +486,7 @@ export default function BossDashboard() {
                         <div className="modal" onClick={(e) => e.stopPropagation()} key={modalKey}>
                             <h2>{t('staff.add')}</h2>
                             <form onSubmit={handleCreateUser}>
-                                <div className="form-group"><label>Telefon raqami</label><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span><input className="input" type="tel" style={{ flex: 1 }} value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} maxLength={9} required /></div></div>
+                                <div className="form-group"><label>{t('boss.phoneNumber')}</label><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ padding: '8px 12px', background: '#f1f5f9', borderRadius: 6, fontWeight: 500, color: '#475569' }}>+998</span><input className="input" type="tel" style={{ flex: 1 }} value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 9) })} maxLength={9} required /></div></div>
                                 <div className="form-group"><label>{t('patients.firstName')}</label><input className="input" value={userForm.first_name} onChange={(e) => setUserForm({ ...userForm, first_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('patients.lastName')}</label><input className="input" value={userForm.last_name} onChange={(e) => setUserForm({ ...userForm, last_name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('staff.role')}</label><select className="input" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="doctor">{t('staff.doctor')}</option><option value="receptionist">{t('staff.receptionist')}</option></select></div>
@@ -517,7 +517,7 @@ export default function BossDashboard() {
                 {showModal === 'editService' && (
                     <div className="modal-overlay" onClick={closeModal}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} key={modalKey}>
-                            <h2><Pencil size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Xizmatni tahrirlash</h2>
+                            <h2><Pencil size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('boss.editService')}</h2>
                             <form onSubmit={handleEditService}>
                                 <div className="form-group"><label>{t('services.name')}</label><input className="input" value={editServiceForm.name} onChange={(e) => setEditServiceForm({ ...editServiceForm, name: e.target.value })} required /></div>
                                 <div className="form-group"><label>{t('services.description')}</label><input className="input" value={editServiceForm.description} onChange={(e) => setEditServiceForm({ ...editServiceForm, description: e.target.value })} /></div>

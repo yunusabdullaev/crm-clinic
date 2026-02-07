@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { useSettings } from '@/lib/settings';
 
 export default function AppointmentsDisplayPage() {
+    const { t } = useSettings();
     const [appointments, setAppointments] = useState<any[]>([]);
 
     const loadAppointments = async () => {
@@ -38,7 +40,7 @@ export default function AppointmentsDisplayPage() {
                 marginBottom: 40,
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
             }}>
-                📋 Bugungi Navbatlar
+                📋 {t('display.title')}
             </h1>
 
             <table style={{
@@ -51,10 +53,10 @@ export default function AppointmentsDisplayPage() {
             }}>
                 <thead>
                     <tr style={{ backgroundColor: '#2563eb' }}>
-                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>Vaqt</th>
-                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>Bemor</th>
-                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>Shifokor</th>
-                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>Holat</th>
+                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>{t('display.time')}</th>
+                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>{t('display.patient')}</th>
+                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>{t('display.doctor')}</th>
+                        <th style={{ padding: 20, color: 'white', fontSize: 24, textAlign: 'left' }}>{t('display.status')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -67,10 +69,10 @@ export default function AppointmentsDisplayPage() {
                                 {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </td>
                             <td style={{ padding: 16, fontSize: 22, fontWeight: 500 }}>
-                                {a.patient_name || 'Noma\'lum'}
+                                {a.patient_name || t('receptionist.unknownPatient')}
                             </td>
                             <td style={{ padding: 16, fontSize: 22 }}>
-                                {a.doctor_name || 'Noma\'lum'}
+                                {a.doctor_name || t('receptionist.unknownPatient')}
                             </td>
                             <td style={{ padding: 16 }}>
                                 <span style={{
@@ -86,9 +88,9 @@ export default function AppointmentsDisplayPage() {
                                         a.status === 'in_progress' ? '#92400e' :
                                             a.status === 'completed' ? '#065f46' : '#991b1b'
                                 }}>
-                                    {a.status === 'scheduled' ? 'Rejalashtirilgan' :
-                                        a.status === 'in_progress' ? 'Jarayonda' :
-                                            a.status === 'completed' ? 'Yakunlangan' : 'Bekor qilingan'}
+                                    {a.status === 'scheduled' ? t('display.scheduled') :
+                                        a.status === 'in_progress' ? t('display.inProgress') :
+                                            a.status === 'completed' ? t('display.completed') : t('display.cancelled')}
                                 </span>
                             </td>
                         </tr>
@@ -101,7 +103,7 @@ export default function AppointmentsDisplayPage() {
                                 fontSize: 24,
                                 color: '#64748b'
                             }}>
-                                Hozircha navbatlar yo'q
+                                {t('display.noAppointments')}
                             </td>
                         </tr>
                     )}
@@ -114,7 +116,7 @@ export default function AppointmentsDisplayPage() {
                 marginTop: 30,
                 fontSize: 18
             }}>
-                Har 30 soniyada avtomatik yangilanadi
+                {t('display.autoRefresh')}
             </p>
         </div>
     );

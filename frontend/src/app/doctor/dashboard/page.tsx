@@ -170,23 +170,23 @@ export default function DoctorDashboard() {
     // Export history to Excel
     const exportHistoryToExcel = () => {
         if (visitHistory.length === 0) {
-            alert('Eksport qilish uchun tarix mavjud emas');
+            alert(t('doctor.exportNoData'));
             return;
         }
 
         const exportData = visitHistory.map((v: any) => ({
-            'Sana': new Date(v.completed_at || v.created_at).toLocaleDateString('uz-UZ'),
-            'Bemor': v.patient_name || '-',
-            'Tashxis': v.diagnosis || '-',
-            'Xizmatlar': (v.services || []).map((s: any) => `${s.service_name} x${s.quantity}`).join(', '),
-            'To\'lov turi': v.payment_type === 'cash' ? 'Naqd' : 'Karta',
-            'Jami summa': v.total || v.total_amount || 0
+            [t('export.date')]: new Date(v.completed_at || v.created_at).toLocaleDateString(),
+            [t('export.patient')]: v.patient_name || '-',
+            [t('export.diagnosis')]: v.diagnosis || '-',
+            [t('export.services')]: (v.services || []).map((s: any) => `${s.service_name} x${s.quantity}`).join(', '),
+            [t('export.paymentType')]: v.payment_type === 'cash' ? t('export.cash') : t('export.card'),
+            [t('export.totalAmount')]: v.total || v.total_amount || 0
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Vizitlar tarixi');
-        XLSX.writeFile(workbook, `vizitlar_tarixi_${historyDateFrom}_${historyDateTo}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, t('export.sheetName'));
+        XLSX.writeFile(workbook, `visit_history_${historyDateFrom}_${historyDateTo}.xlsx`);
     };
 
     const handleLogout = () => {
@@ -205,7 +205,7 @@ export default function DoctorDashboard() {
 
     // Mark appointment as no_show (kelmadi)
     const handleMarkNoShow = async (appointmentId: string) => {
-        if (!confirm('Bemor kelmaganini tasdiqlaysizmi?')) return;
+        if (!confirm(t('doctor.confirmNoShow'))) return;
         try {
             await api.updateAppointmentStatus(appointmentId, 'no_show');
             loadData();
@@ -255,7 +255,7 @@ export default function DoctorDashboard() {
 
     const createInlinePatient = async () => {
         if (!newPatientForm.first_name || !newPatientForm.last_name || !newPatientForm.phone) {
-            alert('Barcha maydonlarni to\'ldiring');
+            alert(t('doctor.fillAllFields'));
             return;
         }
         try {
@@ -272,7 +272,7 @@ export default function DoctorDashboard() {
             setAppointmentForm({ ...appointmentForm, patient_id: newPatient.id });
             setShowNewPatientForm(false);
             setNewPatientForm({ first_name: '', last_name: '', phone: '', gender: 'male' });
-            alert('Bemor yaratildi!');
+            alert(t('doctor.patientCreated'));
         } catch (err: any) {
             alert(err.message);
         }
@@ -281,15 +281,15 @@ export default function DoctorDashboard() {
     const handleCreateAppointment = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!appointmentForm.patient_id) {
-            alert('Bemorni tanlang');
+            alert(t('appointments.selectPatient'));
             return;
         }
         if (!appointmentForm.doctor_id) {
-            alert('Shifokorni tanlang');
+            alert(t('appointments.selectDoctor'));
             return;
         }
         if (!appointmentForm.date || !appointmentForm.hour || !appointmentForm.minute) {
-            alert('Sana va vaqtni tanlang');
+            alert(t('doctor.selectDateTime'));
             return;
         }
 
@@ -301,7 +301,7 @@ export default function DoctorDashboard() {
                 doctor_id: appointmentForm.doctor_id,
                 start_time: startTime,
             });
-            alert('Navbat muvaffaqiyatli qo\'shildi!');
+            alert(t('doctor.appointmentCreated'));
             setShowModal(null);
             loadData();
         } catch (err: any) {
@@ -420,8 +420,8 @@ export default function DoctorDashboard() {
                 <div className="tabs">
                     <button className={`tab ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}><Calendar size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('appointments.title')}</button>
                     <button className={`tab ${activeTab === 'visits' ? 'active' : ''}`} onClick={() => setActiveTab('visits')}><Stethoscope size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('visits.today')}</button>
-                    <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => { setActiveTab('patients'); loadPatients(); }}><Users size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bemorlar</button>
-                    <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); loadHistory(); }}><History size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Tarix</button>
+                    <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => { setActiveTab('patients'); loadPatients(); }}><Users size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('patients.title')}</button>
+                    <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); loadHistory(); }}><History size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.history')}</button>
                 </div>
 
                 {activeTab === 'schedule' && (
@@ -445,7 +445,7 @@ export default function DoctorDashboard() {
                                     style={{ maxWidth: 150 }}
                                 />
                                 <button className="btn btn-primary" onClick={openAppointmentModal}>
-                                    <Plus size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Navbat qo'shish
+                                    <Plus size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.addAppointment')}
                                 </button>
                             </div>
                         </div>
@@ -475,7 +475,7 @@ export default function DoctorDashboard() {
                                                             className="btn btn-secondary"
                                                             onClick={() => handleMarkNoShow(a.id)}
                                                             style={{ backgroundColor: '#ef4444', color: 'white' }}
-                                                            title="Kelmadi"
+                                                            title={t('status.no_show')}
                                                         >
                                                             <UserX size={16} />
                                                         </button>
@@ -536,7 +536,7 @@ export default function DoctorDashboard() {
                 {activeTab === 'history' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Bajarilgan ishlar tarixi</h3>
+                            <h3><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('doctor.workHistory')}</h3>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <input
                                     className="input"
@@ -553,7 +553,7 @@ export default function DoctorDashboard() {
                                     onChange={(e) => setHistoryDateTo(e.target.value)}
                                     style={{ maxWidth: 150 }}
                                 />
-                                <button className="btn btn-primary" onClick={loadHistory}><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Qidirish</button>
+                                <button className="btn btn-primary" onClick={loadHistory}><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('common.search')}</button>
                                 <button className="btn btn-success" onClick={exportHistoryToExcel} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                     <Download size={16} /> Excel
                                 </button>
@@ -565,18 +565,18 @@ export default function DoctorDashboard() {
                                 <table className="table">
                                     <thead>
                                         <tr>
-                                            <th>Sana</th>
-                                            <th>Bemor</th>
-                                            <th>Tashxis</th>
-                                            <th>Xizmatlar</th>
-                                            <th>Jami</th>
+                                            <th>{t('common.date')}</th>
+                                            <th>{t('appointments.patient')}</th>
+                                            <th>{t('visits.diagnosis')}</th>
+                                            <th>{t('nav.services')}</th>
+                                            <th>{t('visits.total')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {visitHistory.map((v) => (
                                             <tr key={v.id}>
                                                 <td>{new Date(v.completed_at || v.created_at).toLocaleString()}</td>
-                                                <td>{v.patient_name || 'Noma\'lum'}</td>
+                                                <td>{v.patient_name || t('doctor.unknown')}</td>
                                                 <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                     {v.diagnosis || '-'}
                                                 </td>
@@ -605,15 +605,15 @@ export default function DoctorDashboard() {
                             </div>
                         ) : (
                             <div className="empty-state">
-                                <p>📭 Bu davrda yakunlangan vizitlar topilmadi</p>
-                                <p style={{ fontSize: 14, color: '#64748b' }}>Sanalarni o'zgartiring va "Qidirish" tugmasini bosing</p>
+                                <p>📭 {t('doctor.noVisitsInPeriod')}</p>
+                                <p style={{ fontSize: 14, color: '#64748b' }}>{t('doctor.changeDatesHint')}</p>
                             </div>
                         )}
 
                         {visitHistory.length > 0 && (
                             <div style={{ marginTop: 16, padding: 16, background: '#f0fdf4', borderRadius: 8, textAlign: 'right' }}>
                                 <strong style={{ color: '#15803d' }}>
-                                    Jami: {visitHistory.length} ta vizit |
+                                    {t('visits.total')}: {visitHistory.length} {t('doctor.totalVisits')} |
                                     {' '}{visitHistory.reduce((sum, v) => sum + (v.total_amount || 0), 0).toLocaleString()} UZS
                                 </strong>
                             </div>
@@ -624,17 +624,17 @@ export default function DoctorDashboard() {
                 {activeTab === 'patients' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3><Users size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Bemorlar ro'yxati</h3>
+                            <h3><Users size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('doctor.patientsList')}</h3>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <input
                                     className="input"
-                                    placeholder="Bemor qidirish..."
+                                    placeholder={t('patients.search')}
                                     value={patientSearch}
                                     onChange={(e) => setPatientSearch(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && loadPatients()}
                                     style={{ maxWidth: 250 }}
                                 />
-                                <button className="btn btn-primary" onClick={() => loadPatients()}><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Qidirish</button>
+                                <button className="btn btn-primary" onClick={() => loadPatients()}><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('common.search')}</button>
                             </div>
                         </div>
 
@@ -686,7 +686,7 @@ export default function DoctorDashboard() {
                                     </div>
                                 ) : (
                                     <div className="empty-state" style={{ textAlign: 'center', padding: 40 }}>
-                                        <p><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bemor qidirish uchun ismni kiriting</p>
+                                        <p><Search size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.searchPatientHint')}</p>
                                     </div>
                                 )}
                             </div>
@@ -698,7 +698,7 @@ export default function DoctorDashboard() {
                                     onClick={() => { setSelectedPatient(null); setPatientVisits([]); setSelectedPatientVisit(null); }}
                                     style={{ marginBottom: 16 }}
                                 >
-                                    <ArrowLeft size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Orqaga
+                                    <ArrowLeft size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.back')}
                                 </button>
 
                                 <div style={{
@@ -729,7 +729,7 @@ export default function DoctorDashboard() {
                                     </div>
                                 </div>
 
-                                <h4 style={{ marginBottom: 12 }}><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Tashriflar tarixi</h4>
+                                <h4 style={{ marginBottom: 12 }}><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('doctor.visitHistory')}</h4>
                                 {patientVisits.length > 0 ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                         {patientVisits.map((v) => (
@@ -750,12 +750,12 @@ export default function DoctorDashboard() {
                                                             <Calendar size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />{new Date(v.completed_at || v.created_at).toLocaleDateString('uz-UZ')}
                                                         </div>
                                                         <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-                                                            {v.diagnosis || 'Tashxis yo\'q'}
+                                                            {v.diagnosis || t('doctor.noDiagnosis')}
                                                         </div>
                                                     </div>
                                                     <div style={{ textAlign: 'right' }}>
                                                         <span className={`badge badge-${v.status}`}>
-                                                            {v.status === 'completed' ? 'Yakunlangan' : 'Jarayonda'}
+                                                            {v.status === 'completed' ? t('status.completed') : t('status.started')}
                                                         </span>
                                                         <div style={{ fontWeight: 600, color: '#059669', marginTop: 4 }}>
                                                             {(v.total || 0).toLocaleString()} UZS
@@ -767,7 +767,7 @@ export default function DoctorDashboard() {
                                     </div>
                                 ) : (
                                     <div className="empty-state" style={{ textAlign: 'center', padding: 20 }}>
-                                        <p><Inbox size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bu bemorning tashriflari yo'q</p>
+                                        <p><Inbox size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.noPatientVisits')}</p>
                                     </div>
                                 )}
                             </div>
@@ -779,35 +779,35 @@ export default function DoctorDashboard() {
                 {selectedPatientVisit && (
                     <div className="modal-overlay" onClick={() => setSelectedPatientVisit(null)}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
-                            <h2><ClipboardList size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />Tashrif tafsilotlari</h2>
+                            <h2><ClipboardList size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('doctor.visitDetails')}</h2>
 
                             <div style={{ marginBottom: 16 }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
-                                        <div style={{ fontSize: 12, color: '#64748b' }}>Sana</div>
+                                        <div style={{ fontSize: 12, color: '#64748b' }}>{t('common.date')}</div>
                                         <div style={{ fontWeight: 600 }}>
                                             {new Date(selectedPatientVisit.completed_at || selectedPatientVisit.created_at).toLocaleDateString('uz-UZ')}
                                         </div>
                                     </div>
                                     <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8 }}>
-                                        <div style={{ fontSize: 12, color: '#64748b' }}>Holat</div>
+                                        <div style={{ fontSize: 12, color: '#64748b' }}>{t('common.status')}</div>
                                         <span className={`badge badge-${selectedPatientVisit.status}`}>
-                                            {selectedPatientVisit.status === 'completed' ? 'Yakunlangan' : 'Jarayonda'}
+                                            {selectedPatientVisit.status === 'completed' ? t('status.completed') : t('status.started')}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div style={{ marginBottom: 16 }}>
-                                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Activity size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Tashxis</label>
+                                <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Activity size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('visits.diagnosis')}</label>
                                 <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                                    {selectedPatientVisit.diagnosis || 'Tashxis kiritilmagan'}
+                                    {selectedPatientVisit.diagnosis || t('doctor.noDiagnosis')}
                                 </div>
                             </div>
 
                             {selectedPatientVisit.affected_teeth?.length > 0 && (
                                 <div style={{ marginBottom: 16 }}>
-                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><FileText size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ta'sirlangan tishlar</label>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><FileText size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('visits.affectedTeeth')}</label>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                         {selectedPatientVisit.affected_teeth.map((t: string) => (
                                             <span key={t} style={{
@@ -824,7 +824,7 @@ export default function DoctorDashboard() {
 
                             {selectedPatientVisit.services?.length > 0 && (
                                 <div style={{ marginBottom: 16 }}>
-                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Wrench size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Bajarilgan xizmatlar</label>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Wrench size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.completedServices')}</label>
                                     <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
                                         {selectedPatientVisit.services.map((s: any, i: number) => (
                                             <div key={i} style={{
@@ -843,7 +843,7 @@ export default function DoctorDashboard() {
 
                             {selectedPatientVisit.xray_images?.length > 0 && (
                                 <div style={{ marginBottom: 16 }}>
-                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Camera size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Rentgen rasmlar</label>
+                                    <label style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}><Camera size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('doctor.xrayImages')}</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8 }}>
                                         {selectedPatientVisit.xray_images.map((url: string, i: number) => (
                                             <img
@@ -872,11 +872,11 @@ export default function DoctorDashboard() {
                                 marginBottom: 16
                             }}>
                                 <strong style={{ fontSize: 18, color: '#059669' }}>
-                                    Jami: {(selectedPatientVisit.total || 0).toLocaleString()} UZS
+                                    {t('visits.total')}: {(selectedPatientVisit.total || 0).toLocaleString()} UZS
                                 </strong>
                             </div>
 
-                            <button className="btn btn-secondary" onClick={() => setSelectedPatientVisit(null)}>Yopish</button>
+                            <button className="btn btn-secondary" onClick={() => setSelectedPatientVisit(null)}>{t('doctor.close')}</button>
                         </div>
                     </div>
                 )}
@@ -1108,7 +1108,7 @@ export default function DoctorDashboard() {
                                                 <input
                                                     type="text"
                                                     className="input"
-                                                    placeholder="🔍 Xizmat qidirish..."
+                                                    placeholder={`🔍 ${t('doctor.serviceSearch')}`}
                                                     value={serviceSearch}
                                                     onChange={(e) => setServiceSearch(e.target.value)}
                                                     style={{ width: '100%' }}
@@ -1200,7 +1200,7 @@ export default function DoctorDashboard() {
                                     {visitForm.services.length > 0 && (
                                         <div style={{ marginTop: 12, padding: 12, background: '#f0fdf4', borderRadius: 8 }}>
                                             <div style={{ fontSize: 13, color: '#15803d', fontWeight: 500 }}>
-                                                ✓ Tanlangan: {visitForm.services.length} ta xizmat
+                                                ✓ {t('doctor.selectedServices')}: {visitForm.services.length} {t('doctor.servicesCount')}
                                             </div>
                                         </div>
                                     )}
@@ -1240,18 +1240,18 @@ export default function DoctorDashboard() {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label><MessageSquare size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Izoh / Komentariy</label>
+                                    <label><MessageSquare size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />{t('doctor.comment')}</label>
                                     <textarea
                                         className="input"
                                         rows={2}
                                         value={visitForm.comment}
                                         onChange={(e) => setVisitForm({ ...visitForm, comment: e.target.value })}
-                                        placeholder="Qo'shimcha izohlar..."
+                                        placeholder={t('visits.notesPlaceholder')}
                                     />
                                 </div>
                                 {/* X-ray Image Upload Section */}
                                 <div className="form-group">
-                                    <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}><Camera size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Rentgen fotolari</label>
+                                    <label style={{ marginBottom: 8, display: 'block', fontWeight: 600 }}><Camera size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />{t('doctor.xrayPhotos')}</label>
                                     <div style={{
                                         background: '#f8fafc',
                                         borderRadius: 12,
@@ -1282,7 +1282,7 @@ export default function DoctorDashboard() {
                                                             xray_images: [...prev.xray_images, ...uploadedUrls]
                                                         }));
                                                     } catch (err: any) {
-                                                        alert('Rasm yuklashda xatolik: ' + (err.message || 'Xatolik'));
+                                                        alert(t('doctor.uploadError') + ': ' + (err.message || t('doctor.error')));
                                                     } finally {
                                                         setXrayUploading(false);
                                                         e.target.value = '';
@@ -1306,7 +1306,7 @@ export default function DoctorDashboard() {
                                                     fontWeight: 500
                                                 }}
                                             >
-                                                {xrayUploading ? '⏳ Yuklanmoqda...' : '+ Rasm yuklash'}
+                                                {xrayUploading ? t('doctor.uploading') : '+ ' + t('doctor.uploadImage')}
                                             </button>
                                         </div>
 
@@ -1351,7 +1351,7 @@ export default function DoctorDashboard() {
                                                                         xray_images: prev.xray_images.filter((_, i) => i !== index)
                                                                     }));
                                                                 } catch (err: any) {
-                                                                    alert('O\'chirishda xatolik: ' + (err.message || 'Xatolik'));
+                                                                    alert(t('doctor.deleteError') + ': ' + (err.message || t('doctor.error')));
                                                                 }
                                                             }}
                                                             style={{
@@ -1379,7 +1379,7 @@ export default function DoctorDashboard() {
 
                                         {visitForm.xray_images.length === 0 && (
                                             <p style={{ color: '#94a3b8', fontSize: 13, margin: 0, textAlign: 'center' }}>
-                                                Rentgen rasmlarini yuklash uchun tugmani bosing
+                                                {t('doctor.xrayUploadHint')}
                                             </p>
                                         )}
                                     </div>
@@ -1416,7 +1416,7 @@ export default function DoctorDashboard() {
                                                 setVisits(visitsData.visits || []);
                                                 setShowModal(null);
                                             } catch (err: any) {
-                                                alert('Xatolik: ' + (err.message || 'Saqlashda xato'));
+                                                alert(t('doctor.error') + ': ' + (err.message || t('doctor.saveError')));
                                             }
                                         }}
                                     >{t('treatmentPlan.save')}</button>
@@ -1478,19 +1478,19 @@ export default function DoctorDashboard() {
                 {showModal === 'appointment' && (
                     <div className="modal-overlay" onClick={() => setShowModal(null)}>
                         <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
-                            <h2><Plus size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />Navbat qo'shish</h2>
+                            <h2><Plus size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('doctor.addAppointment')}</h2>
                             <form onSubmit={handleCreateAppointment}>
                                 {/* Patient Search */}
                                 <div className="form-group">
                                     <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>Bemor</span>
+                                        <span>{t('appointments.patient')}</span>
                                         <button
                                             type="button"
                                             className="btn btn-success"
                                             style={{ padding: '4px 8px', fontSize: 12 }}
                                             onClick={() => setShowNewPatientForm(!showNewPatientForm)}
                                         >
-                                            <Plus size={14} /> Yangi bemor
+                                            <Plus size={14} /> {t('doctor.newPatient')}
                                         </button>
                                     </label>
 
@@ -1500,14 +1500,14 @@ export default function DoctorDashboard() {
                                             <div style={{ marginBottom: 8 }}>
                                                 <input
                                                     className="input"
-                                                    placeholder="Ism"
+                                                    placeholder={t('patients.firstName')}
                                                     value={newPatientForm.first_name}
                                                     onChange={(e) => setNewPatientForm({ ...newPatientForm, first_name: e.target.value })}
                                                     style={{ marginBottom: 8 }}
                                                 />
                                                 <input
                                                     className="input"
-                                                    placeholder="Familiya"
+                                                    placeholder={t('patients.lastName')}
                                                     value={newPatientForm.last_name}
                                                     onChange={(e) => setNewPatientForm({ ...newPatientForm, last_name: e.target.value })}
                                                     style={{ marginBottom: 8 }}
@@ -1526,12 +1526,12 @@ export default function DoctorDashboard() {
                                                     value={newPatientForm.gender}
                                                     onChange={(e) => setNewPatientForm({ ...newPatientForm, gender: e.target.value })}
                                                 >
-                                                    <option value="male">Erkak</option>
-                                                    <option value="female">Ayol</option>
+                                                    <option value="male">{t('patients.male')}</option>
+                                                    <option value="female">{t('patients.female')}</option>
                                                 </select>
                                             </div>
                                             <button type="button" className="btn btn-primary" onClick={createInlinePatient}>
-                                                Bemor yaratish
+                                                {t('doctor.createPatient')}
                                             </button>
                                         </div>
                                     )}
@@ -1542,7 +1542,7 @@ export default function DoctorDashboard() {
                                             <input
                                                 className="input"
                                                 style={{ paddingLeft: 36 }}
-                                                placeholder="Bemor qidirish..."
+                                                placeholder={t('patients.search')}
                                                 value={appointmentPatientSearch}
                                                 onChange={(e) => handleAppointmentPatientSearch(e.target.value)}
                                                 onFocus={() => appointmentPatientSearch.length >= 2 && setShowPatientDropdown(true)}
@@ -1563,7 +1563,7 @@ export default function DoctorDashboard() {
                                             </div>
                                         )}
                                         {showPatientDropdown && appointmentFilteredPatients.length === 0 && appointmentPatientSearch.length >= 2 && (
-                                            <div className="patient-search-empty">Bemor topilmadi</div>
+                                            <div className="patient-search-empty">{t('patients.noPatients')}</div>
                                         )}
                                     </div>
                                     {appointmentSelectedPatient && (
@@ -1575,14 +1575,14 @@ export default function DoctorDashboard() {
 
                                 {/* Doctor Selection */}
                                 <div className="form-group">
-                                    <label>Shifokor</label>
+                                    <label>{t('appointments.doctor')}</label>
                                     <select
                                         className="input"
                                         value={appointmentForm.doctor_id}
                                         onChange={(e) => setAppointmentForm({ ...appointmentForm, doctor_id: e.target.value })}
                                         required
                                     >
-                                        <option value="">Shifokorni tanlang</option>
+                                        <option value="">{t('appointments.selectDoctor')}</option>
                                         {doctors.map((d) => (
                                             <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>
                                         ))}
@@ -1592,7 +1592,7 @@ export default function DoctorDashboard() {
                                 {/* Date and Time */}
                                 <div style={{ display: 'flex', gap: 12 }}>
                                     <div className="form-group" style={{ flex: 1 }}>
-                                        <label>Sana</label>
+                                        <label>{t('common.date')}</label>
                                         <input
                                             className="input"
                                             type="date"
@@ -1602,7 +1602,7 @@ export default function DoctorDashboard() {
                                         />
                                     </div>
                                     <div className="form-group" style={{ flex: 1 }}>
-                                        <label>Vaqt</label>
+                                        <label>{t('common.time')}</label>
                                         <div style={{ display: 'flex', gap: 8 }}>
                                             <select
                                                 className="input"
@@ -1611,7 +1611,7 @@ export default function DoctorDashboard() {
                                                 onChange={(e) => setAppointmentForm({ ...appointmentForm, hour: e.target.value })}
                                                 required
                                             >
-                                                <option value="">Soat</option>
+                                                <option value="">{t('doctor.hour')}</option>
                                                 {HOURS.map((h) => (
                                                     <option key={h} value={h}>{h}</option>
                                                 ))}
@@ -1624,7 +1624,7 @@ export default function DoctorDashboard() {
                                                 onChange={(e) => setAppointmentForm({ ...appointmentForm, minute: e.target.value })}
                                                 required
                                             >
-                                                <option value="">Minut</option>
+                                                <option value="">{t('doctor.minute')}</option>
                                                 {MINUTES.map((m) => (
                                                     <option key={m} value={m}>{m}</option>
                                                 ))}
@@ -1634,8 +1634,8 @@ export default function DoctorDashboard() {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: 8 }}>
-                                    <button type="submit" className="btn btn-primary">Navbat qo'shish</button>
-                                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(null)}>Bekor qilish</button>
+                                    <button type="submit" className="btn btn-primary">{t('doctor.addAppointment')}</button>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(null)}>{t('common.cancel')}</button>
                                 </div>
                             </form>
                         </div>

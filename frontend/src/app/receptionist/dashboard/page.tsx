@@ -173,21 +173,21 @@ export default function ReceptionistDashboard() {
     // Export patients to Excel
     const exportPatientsToExcel = () => {
         if (patients.length === 0) {
-            alert('Eksport qilish uchun bemorlar mavjud emas');
+            alert(t('receptionist.exportNoPatients'));
             return;
         }
 
         const exportData = patients.map((p: any) => ({
-            'Ism': p.first_name || '-',
-            'Familiya': p.last_name || '-',
-            'Telefon': p.phone || '-',
-            'Jinsi': p.gender === 'male' ? 'Erkak' : p.gender === 'female' ? 'Ayol' : '-',
-            'Ro\'yxatga olingan': new Date(p.created_at).toLocaleDateString('uz-UZ')
+            [t('export.firstName')]: p.first_name || '-',
+            [t('export.lastName')]: p.last_name || '-',
+            [t('export.phone')]: p.phone || '-',
+            [t('export.gender')]: p.gender === 'male' ? t('patients.male') : p.gender === 'female' ? t('patients.female') : '-',
+            [t('export.registeredDate')]: new Date(p.created_at).toLocaleDateString('uz-UZ')
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Bemorlar');
+        XLSX.utils.book_append_sheet(workbook, worksheet, t('export.patientsSheet'));
         XLSX.writeFile(workbook, `bemorlar_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
@@ -258,11 +258,11 @@ export default function ReceptionistDashboard() {
             return;
         }
         if (!appointmentForm.doctor_id) {
-            alert('Shifokorni tanlang');
+            alert(t('receptionist.selectDoctor'));
             return;
         }
         if (!appointmentForm.date || !appointmentForm.hour || !appointmentForm.minute) {
-            alert('Sana va vaqtni tanlang');
+            alert(t('receptionist.selectDateTime'));
             return;
         }
 
@@ -276,7 +276,7 @@ export default function ReceptionistDashboard() {
                 doctor_id: appointmentForm.doctor_id,
                 start_time: startTime,
             });
-            showToast('Navbat muvaffaqiyatli qo\'shildi!', 'success');
+            showToast(t('receptionist.appointmentCreated'), 'success');
             closeModal();
             setAppointmentForm(INITIAL_APPOINTMENT_FORM);
             setSelectedPatient(null);
@@ -285,7 +285,7 @@ export default function ReceptionistDashboard() {
         } catch (err: any) {
             console.error('Appointment creation error:', err);
             if (err.message.includes('vaqtda')) {
-                showToast('Doktor vaqti bosh emas!', 'error');
+                showToast(t('receptionist.doctorBusy'), 'error');
             } else {
                 showToast(err.message, 'error');
             }
@@ -335,7 +335,7 @@ export default function ReceptionistDashboard() {
                 <div className="tabs">
                     <button className={`tab ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}><Calendar size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('appointments.today')}</button>
                     <button className={`tab ${activeTab === 'patients' ? 'active' : ''}`} onClick={() => setActiveTab('patients')}><Users size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('patients.title')}</button>
-                    <button className={`tab ${activeTab === 'jadval' ? 'active' : ''}`} onClick={() => setActiveTab('jadval')}><ClipboardList size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Jadval</button>
+                    <button className={`tab ${activeTab === 'jadval' ? 'active' : ''}`} onClick={() => setActiveTab('jadval')}><ClipboardList size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('receptionist.schedule')}</button>
                 </div>
 
                 {/* Stats Panel */}
@@ -351,7 +351,7 @@ export default function ReceptionistDashboard() {
                         </div>
                         <div>
                             <div className="stats-panel-value">{todayAppointments.length}</div>
-                            <div className="stats-panel-label">Bugungi qabullar</div>
+                            <div className="stats-panel-label">{t('receptionist.todayAppointments')}</div>
                         </div>
                     </div>
 
@@ -364,7 +364,7 @@ export default function ReceptionistDashboard() {
                         </div>
                         <div>
                             <div className="stats-panel-value">{todayAppointments.filter(a => a.status === 'completed' || a.status === 'in_progress').length}</div>
-                            <div className="stats-panel-label">Kelganlar</div>
+                            <div className="stats-panel-label">{t('receptionist.arrived')}</div>
                         </div>
                     </div>
 
@@ -374,7 +374,7 @@ export default function ReceptionistDashboard() {
                         </div>
                         <div>
                             <div className="stats-panel-value">{todayAppointments.filter(a => a.status === 'cancelled' || a.status === 'no_show').length}</div>
-                            <div className="stats-panel-label">Kelmaganlar</div>
+                            <div className="stats-panel-label">{t('receptionist.noShow')}</div>
                         </div>
                     </div>
                 </div>
@@ -434,7 +434,7 @@ export default function ReceptionistDashboard() {
                 {activeTab === 'appointments' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                            <h3><Calendar size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Bugungi navbatlar ({today})</h3>
+                            <h3><Calendar size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('receptionist.todayAppointments')} ({today})</h3>
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <button className="btn btn-primary" onClick={() => openModal('appointment')}>{t('appointments.book')}</button>
                                 <button
@@ -442,7 +442,7 @@ export default function ReceptionistDashboard() {
                                     onClick={() => window.open('/display', 'navbatlar_display', 'width=1200,height=800')}
                                     style={{ backgroundColor: '#8b5cf6' }}
                                 >
-                                    <Monitor size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />Ekranga chiqarish
+                                    <Monitor size={16} style={{ marginRight: 4, verticalAlign: 'middle' }} />{t('receptionist.showOnScreen')}
                                 </button>
                             </div>
                         </div>
@@ -465,7 +465,7 @@ export default function ReceptionistDashboard() {
                                     </tr>
                                 ))}
                                 {todayAppointments.length === 0 && (
-                                    <tr><td colSpan={4} className="empty-state">Bugungi navbatlar yo'q</td></tr>
+                                    <tr><td colSpan={4} className="empty-state">{t('receptionist.noTodayAppointments')}</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -475,7 +475,7 @@ export default function ReceptionistDashboard() {
                 {activeTab === 'jadval' && (
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h3><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Shifokorlar jadvali</h3>
+                            <h3><ClipboardList size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />{t('receptionist.doctorsSchedule')}</h3>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <input
                                     className="input"
@@ -548,7 +548,7 @@ export default function ReceptionistDashboard() {
                                                     Dr. {doctor.first_name} {doctor.last_name}
                                                 </div>
                                                 <div style={{ color: '#64748b', fontSize: 13 }}>
-                                                    {doctorAppointments.length} ta navbat
+                                                    {doctorAppointments.length} {t('receptionist.appointments')}
                                                 </div>
                                             </div>
                                         </div>
@@ -594,7 +594,7 @@ export default function ReceptionistDashboard() {
                                                                 </div>
                                                                 <div style={{ flex: 1 }}>
                                                                     <span style={{ fontWeight: 500 }}>
-                                                                        {a.patient_name || 'Noma\'lum bemor'}
+                                                                        {a.patient_name || t('receptionist.unknownPatient')}
                                                                     </span>
                                                                 </div>
                                                                 <span className={`badge badge-${a.status}`} style={{ fontSize: 11 }}>
@@ -810,14 +810,14 @@ export default function ReceptionistDashboard() {
                                         <label>{t('common.time')}</label>
                                         <div style={{ display: 'flex', gap: 8 }}>
                                             <select className="input" style={{ flex: 1 }} value={appointmentForm.hour} onChange={(e) => setAppointmentForm({ ...appointmentForm, hour: e.target.value })} required>
-                                                <option value="">Soat</option>
+                                                <option value="">{t('common.hour')}</option>
                                                 {HOURS.map((h) => (
                                                     <option key={h} value={h}>{h}</option>
                                                 ))}
                                             </select>
                                             <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
                                             <select className="input" style={{ flex: 1 }} value={appointmentForm.minute} onChange={(e) => setAppointmentForm({ ...appointmentForm, minute: e.target.value })} required>
-                                                <option value="">Minut</option>
+                                                <option value="">{t('common.minute')}</option>
                                                 {MINUTES.map((m) => (
                                                     <option key={m} value={m}>{m}</option>
                                                 ))}
